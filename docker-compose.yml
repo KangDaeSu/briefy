@@ -1,0 +1,22 @@
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    container_name: briefy-db
+    environment:
+      POSTGRES_DB: briefy
+      POSTGRES_USER: briefy
+      POSTGRES_PASSWORD: briefy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U briefy -d briefy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
