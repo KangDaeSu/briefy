@@ -8,7 +8,7 @@
 | Layer     | Technology                          |
 |-----------|-------------------------------------|
 | Frontend  | React 19, TypeScript, Vite          |
-| Backend   | Spring Boot 4.0, Spring AI          |
+| Backend   | Spring Boot 4.0.6, Spring AI        |
 | Database  | PostgreSQL 18 + pgvector 0.8.2      |
 | AI        | Spring AI (RAG pipeline, embedding) |
 
@@ -117,6 +117,25 @@ NEWS_API_KEY=...
 ```
 VITE_API_BASE_URL=http://localhost:8080
 ```
+
+## Reference Docs
+
+코드 작업 시 아래 공식 문서를 WebFetch로 직접 참조한다.
+
+| 기술                                | 문서 URL                                                                          |
+|-----------------------------------|---------------------------------------------------------------------------------|
+| Spring AI 2.x                     | https://docs.spring.io/spring-ai/reference/                                     |
+| Spring AI — PgVectorStore         | https://docs.spring.io/spring-ai/reference/api/vectordbs/pgvector.html          |
+| Spring AI — OpenAI Embeddings     | https://docs.spring.io/spring-ai/reference/api/embeddings/openai-embeddings.html |
+| Spring AI — ChatClient / Advisors | https://docs.spring.io/spring-ai/reference/api/chatclient.html                  |
+| Spring Boot 4.0                   | https://docs.spring.io/spring-boot/reference/                                   |
+| Spring Boot — Testcontainers      | https://docs.spring.io/spring-boot/reference/testing/testcontainers.html        |
+| pgvector                          | https://github.com/pgvector/pgvector                                            |
+| Flyway                            | https://documentation.red-gate.com/flyway                                       |
+| React 19                          | https://react.dev                                                               |
+| Vite                              | https://vite.dev/guide/                                                         |
+| jspecify                          | https://jspecify.dev/docs/user-guide                                            |
+| PostgreSQL 18                     | https://www.postgresql.org/docs/18/                                             |
 
 ## Development Notes
 

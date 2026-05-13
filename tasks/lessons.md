@@ -62,4 +62,29 @@
 ---
 
 ## 기타
+### [2026-05-13] Claude Code에 공식 문서 연결하기 (Context7 MCP)
 
+**증상**: Claude Code가 React 19, Spring Boot 4.0 등 최신 API를 옛날 패턴으로 생성함 (예: forwardRef 사용, 구버전 Spring 어노테이션 등)
+
+**원인**: Claude의 훈련 데이터 컷오프 이후 변경된 API를 실시간으로 알 수 없음
+
+**해결**:
+1. Context7 MCP 설치
+```bash
+   claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
+```
+2. CLAUDE.md에 공식 문서 URL 명시
+```markdown
+   ## Official Documentation
+   - React 19: https://react.dev
+   - Spring Boot 4.0: https://docs.spring.io/spring-boot/docs/4.0.x/reference/html/
+   - Spring AI: https://docs.spring.io/spring-ai/reference/
+   - PostgreSQL 18: https://www.postgresql.org/docs/18/
+   - pgvector: https://github.com/pgvector/pgvector
+```
+3. 프롬프트 끝에 `use context7` 추가하면 실시간 문서 기반으로 코드 생성
+
+**교훈**:
+- 최신 프레임워크 코드 생성 시 반드시 `use context7`를 붙일 것
+- CLAUDE.md에 버전과 문서 URL을 명시해두면 매 세션마다 컨텍스트 재설정 불필요
+- `claude mcp list`로 MCP 서버 등록 여부 먼저 확인

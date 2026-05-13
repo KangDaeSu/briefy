@@ -8,24 +8,24 @@
 ## Phase 1 — 인프라 & 기초 설정
 
 ### 1-1. 프로젝트 초기화
-- [ ] Spring Boot 4.0 프로젝트 생성 (Gradle, Java 21)
+- [x] Spring Boot 4.0 프로젝트 생성 (Maven, Java 21)
   - 의존성: Spring Web, Spring Data JPA, Spring AI, PostgreSQL Driver, Spring Security
-- [ ] React 19 + Vite + TypeScript 프론트엔드 생성
-- [ ] Docker Compose: PostgreSQL 18 + pgvector 설정
+- [ ] React 19 + Vite + Javascript 프론트엔드 생성
+- [x] Docker Compose: PostgreSQL 18 + pgvector 설정
 - [ ] GitHub 레포 및 브랜치 전략 수립 (`main` / `dev` / `feature/*`)
 
 ### 1-2. DB 스키마 설계
-- [ ] `users` — 사용자 계정 및 관심사 태그
-- [ ] `schedules` — 일정 (제목, 시간, 반복, 알림)
-- [ ] `news_articles` — 수집된 원문 기사 메타데이터
-- [ ] `news_embeddings` — 청크 임베딩 (pgvector)
-- [ ] `briefs` — 생성된 브리핑 캐시
-- [ ] Flyway 마이그레이션 스크립트 작성
+- [x] `users` — 사용자 계정 및 관심사 태그
+- [x] `schedules` — 일정 (제목, 시간, 반복, 알림)
+- [x] `news_articles` — 수집된 원문 기사 메타데이터
+- [x] `news_embeddings` — 청크 임베딩 (pgvector)
+- [x] `briefs` — 생성된 브리핑 캐시
+- [x] Flyway 마이그레이션 스크립트 작성
 
 ### 1-3. Spring AI + pgvector 연동
-- [ ] `PgVectorStore` Bean 설정
-- [ ] `EmbeddingModel` 설정 (OpenAI text-embedding-3-small)
-- [ ] 임베딩 저장/검색 통합 테스트 작성
+- [x] `PgVectorStore` Bean 설정 (application.yml auto-config, Spring AI 2.0.0-M6)
+- [x] `EmbeddingModel` 설정 (OpenAI text-embedding-3-large, 3072dim)
+- [x] 임베딩 저장/검색 통합 테스트 작성 (Testcontainers + MockBean)
 
 ---
 
@@ -91,11 +91,13 @@
 
 ## 현재 진행 상태
 
-| Phase       | 상태    |
-|-------------|---------|
-| Phase 1     | 미시작  |
-| Phase 2     | 미시작  |
-| Phase 3     | 미시작  |
-| Phase 4     | 미시작  |
+| Phase       | 상태      |
+|-------------|-----------|
+| Phase 1-1   | 완료      |
+| Phase 1-2   | 완료      |
+| Phase 1-3   | 완료      |
+| Phase 2     | 미시작    |
+| Phase 3     | 미시작    |
+| Phase 4     | 미시작    |
 
-> 마지막 업데이트: 2026-05-12
+> 마지막 업데이트: 2026-05-13

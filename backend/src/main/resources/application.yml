@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: briefy
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/briefy}
+    username: ${SPRING_DATASOURCE_USERNAME:briefy}
+    password: ${SPRING_DATASOURCE_PASSWORD:briefy}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:dummy-key-for-local-dev}
+      embedding:
+        model: text-embedding-3-large    # Spring AI 2.x: .options. 제거
+        dimensions: 3072
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.3
+    vectorstore:
+      pgvector:
+        table-name: news_embeddings
+        initialize-schema: false         # Flyway가 스키마 관리
+        index-type: HNSW                 # Spring AI 2.x enum: 대문자
+        distance-type: COSINE_DISTANCE   # Spring AI 2.x enum: 대문자
+        dimensions: 3072
+        schema-validation: false         # 커스텀 스키마 (created_at 등 추가 컬럼) 허용
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.briefy: DEBUG
+    org.springframework.ai: INFO
