@@ -12,7 +12,7 @@
   - 의존성: Spring Web, Spring Data JPA, Spring AI, PostgreSQL Driver, Spring Security
 - [x] React 19 + Vite + Javascript 프론트엔드 생성
 - [x] Docker Compose: PostgreSQL 18 + pgvector 설정
-- [ ] GitHub 레포 및 브랜치 전략 수립 (`main` / `dev` / `feature/*`)
+- [x] GitHub 레포 및 브랜치 전략 수립 (`main` / `dev` / `feature/*`)
 
 ### 1-2. DB 스키마 설계
 - [x] `users` — 사용자 계정 및 관심사 태그
