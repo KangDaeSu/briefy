@@ -44,6 +44,11 @@ out/
 docker-compose.override.yml
 
 # =====================
+# Claude Code
+# =====================
+.claude/
+
+# =====================
 # OS
 # =====================
 .DS_Store
