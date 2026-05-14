@@ -1,7 +1,7 @@
 package com.briefy.infra.ai;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -32,14 +32,16 @@ public class RagConfig {
      */
     @Bean
     public ChatClient ragChatClient(ChatModel chatModel, VectorStore vectorStore) {
-        var searchRequest = SearchRequest.builder()
-                .topK(TOP_K)
-                .similarityThreshold(SIMILARITY_THRESHOLD)
+        var qaAdvisor = QuestionAnswerAdvisor.builder(vectorStore)
+                .searchRequest(SearchRequest.builder()
+                        .topK(TOP_K)
+                        .similarityThreshold(SIMILARITY_THRESHOLD)
+                        .build())
                 .build();
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore, searchRequest))
+                .defaultAdvisors(qaAdvisor)
                 .build();
     }
 }

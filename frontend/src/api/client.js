@@ -9,6 +9,7 @@ async function request(path, options = {}) {
     const err = await res.json().catch(() => ({}))
     throw Object.assign(new Error(err.message ?? res.statusText), { status: res.status, body: err })
   }
+  if (res.status === 204 || res.headers.get('Content-Length') === '0') return null
   return res.json()
 }
 
