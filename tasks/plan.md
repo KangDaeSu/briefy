@@ -10,7 +10,7 @@
 ### 1-1. 프로젝트 초기화
 - [x] Spring Boot 4.0 프로젝트 생성 (Maven, Java 21)
   - 의존성: Spring Web, Spring Data JPA, Spring AI, PostgreSQL Driver, Spring Security
-- [ ] React 19 + Vite + Javascript 프론트엔드 생성
+- [x] React 19 + Vite + Javascript 프론트엔드 생성
 - [x] Docker Compose: PostgreSQL 18 + pgvector 설정
 - [ ] GitHub 레포 및 브랜치 전략 수립 (`main` / `dev` / `feature/*`)
 
