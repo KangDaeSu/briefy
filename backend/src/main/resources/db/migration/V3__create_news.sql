@@ -1,9 +1,9 @@
 -- 수집된 뉴스 원문 메타데이터
 CREATE TABLE news_articles (
-    id           UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id           UUID         NOT NULL DEFAULT uuidv7(),
     url          TEXT         NOT NULL,
     -- SHA-256 hex — 중복 기사 필터링 기준 (URL 정규화 후 해시)
-    url_hash     CHAR(64)     NOT NULL,
+    url_hash     VARCHAR(64)  NOT NULL,
     title        TEXT         NOT NULL,
     source       VARCHAR(255),
     author       VARCHAR(255),
@@ -23,7 +23,7 @@ CREATE INDEX news_articles_embedded_idx  ON news_articles (embedded) WHERE embed
 -- 뉴스 임베딩 저장소 (Spring AI PgVectorStore 호환 스키마)
 -- Spring AI가 content/metadata/embedding 컬럼을 직접 관리
 CREATE TABLE news_embeddings (
-    id         UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id         UUID         NOT NULL DEFAULT uuidv7(),
     content    TEXT,
     -- article_id, title, url 등 참조 정보는 metadata JSONB에 저장
     metadata   JSONB,
@@ -33,7 +33,8 @@ CREATE TABLE news_embeddings (
     CONSTRAINT news_embeddings_pk PRIMARY KEY (id)
 );
 
--- HNSW 인덱스: IVFFlat 대비 검색 품질 우수 (pgvector 0.5.0+ 권장)
+-- HNSW 인덱스: vector(3072)는 2000차원 제한으로 halfvec 캐스팅 함수 인덱스 사용
+-- pgvector 0.7.0+: halfvec 최대 4000차원, HNSW 검색 품질 유지
 CREATE INDEX news_embeddings_hnsw_idx
-    ON news_embeddings USING hnsw (embedding vector_cosine_ops)
+    ON news_embeddings USING hnsw ((embedding::halfvec(3072)) halfvec_cosine_ops)
     WITH (m = 16, ef_construction = 64);

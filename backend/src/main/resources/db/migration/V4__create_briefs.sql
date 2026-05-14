@@ -1,7 +1,7 @@
 -- 생성된 브리핑 캐시
 -- valid_until 이전이면 재사용, 이후면 재생성
 CREATE TABLE briefs (
-    id           UUID        NOT NULL DEFAULT uuid_generate_v7(),
+    id           UUID        NOT NULL DEFAULT uuidv7(),
     user_id      UUID        NOT NULL,
     content      TEXT        NOT NULL,
     -- 인용 출처: [{article_id, title, url, source}]

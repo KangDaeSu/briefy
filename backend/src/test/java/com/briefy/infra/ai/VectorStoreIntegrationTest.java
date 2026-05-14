@@ -1,19 +1,21 @@
 package com.briefy.infra.ai;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
-import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -23,20 +25,20 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 
 /**
  * PgVectorStore + Flyway 통합 테스트.
  * - pgvector/pgvector:pg18 컨테이너를 실제로 기동
- * - EmbeddingModel은 Mock (OpenAI API 호출 없음)
+ * - EmbeddingModel은 고정 벡터를 반환하는 테스트 구현체 사용 (OpenAI API 호출 없음)
  * - 임베딩 저장 → 유사도 검색 전체 흐름 검증
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
 @ActiveProfiles("test")
+@Import(VectorStoreIntegrationTest.EmbeddingModelTestConfig.class)
 class VectorStoreIntegrationTest {
 
     @Container
@@ -44,25 +46,11 @@ class VectorStoreIntegrationTest {
     static PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("pgvector/pgvector:pg18");
 
-    // OpenAI 실제 호출 대신 고정 벡터 반환
-    @MockBean
-    EmbeddingModel embeddingModel;
-
     @Autowired
     VectorStore vectorStore;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
-
-    @BeforeEach
-    void mockEmbedding() {
-        float[] vec = new float[3072];
-        Arrays.fill(vec, 0.1f);
-
-        given(embeddingModel.call(any(EmbeddingRequest.class)))
-                .willReturn(new EmbeddingResponse(List.of(new Embedding(vec, 0))));
-        given(embeddingModel.dimensions()).willReturn(3072);
-    }
 
     // ─────────────────────────────────────────
     // 스키마 검증
@@ -113,6 +101,7 @@ class VectorStoreIntegrationTest {
                 SearchRequest.builder()
                         .query("Java RAG 파이프라인")
                         .topK(3)
+                        .similarityThreshold(0.0)
                         .build());
 
         assertThat(results).isNotEmpty();
@@ -120,8 +109,8 @@ class VectorStoreIntegrationTest {
     }
 
     @Test
-    @DisplayName("여러 문서를 배치로 저장하고 메타데이터로 필터링할 수 있어야 한다")
-    void batchAddWithMetadataFilter() {
+    @DisplayName("여러 문서를 배치로 저장하고 유사도 검색으로 조회할 수 있어야 한다")
+    void batchAddAndSearch() {
         var docs = List.of(
                 new Document("AI가 의료 진단 정확도를 크게 향상시켰다.",
                         Map.of("category", "healthcare")),
@@ -137,6 +126,7 @@ class VectorStoreIntegrationTest {
                 SearchRequest.builder()
                         .query("인공지능 기술 발전")
                         .topK(5)
+                        .similarityThreshold(0.0)
                         .build());
 
         assertThat(results).isNotEmpty();
@@ -151,5 +141,46 @@ class VectorStoreIntegrationTest {
                 "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?",
                 Integer.class, tableName);
         assertThat(count).as("테이블 존재 여부: %s", tableName).isEqualTo(1);
+    }
+
+    // ─────────────────────────────────────────
+    // Test EmbeddingModel: 고정 벡터 반환, OpenAI 미호출
+    // ─────────────────────────────────────────
+
+    @TestConfiguration
+    static class EmbeddingModelTestConfig {
+
+        private static final int DIMS = 3072;
+
+        @Bean
+        @Primary
+        EmbeddingModel fixedVectorEmbeddingModel() {
+            return new EmbeddingModel() {
+                @Override
+                public EmbeddingResponse call(EmbeddingRequest request) {
+                    List<Embedding> embeddings = IntStream
+                            .range(0, request.getInstructions().size())
+                            .mapToObj(i -> new Embedding(fixedVec(), i))
+                            .toList();
+                    return new EmbeddingResponse(embeddings);
+                }
+
+                @Override
+                public float[] embed(Document document) {
+                    return fixedVec();
+                }
+
+                @Override
+                public int dimensions() {
+                    return DIMS;
+                }
+
+                private float[] fixedVec() {
+                    float[] vec = new float[DIMS];
+                    Arrays.fill(vec, 0.1f);
+                    return vec;
+                }
+            };
+        }
     }
 }

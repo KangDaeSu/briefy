@@ -2,7 +2,7 @@
 -- 중복 방지: GiST EXCLUDE 제약 — 동일 user_id의 시간 범위 겹침 방지
 -- (PostgreSQL 17+ WITHOUT OVERLAPS 구문과 동일한 의미)
 CREATE TABLE schedules (
-    id          UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id          UUID         NOT NULL DEFAULT uuidv7(),
     user_id     UUID         NOT NULL,
     title       VARCHAR(255) NOT NULL,
     description TEXT,
