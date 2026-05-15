@@ -103,6 +103,13 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
+        <!-- RRULE 파싱 (iCalendar 반복 일정) -->
+        <dependency>
+            <groupId>net.sf.biweekly</groupId>
+            <artifactId>biweekly</artifactId>
+            <version>0.6.8</version>
+        </dependency>
+
         <!-- JSpecify -->
         <dependency>
             <groupId>org.jspecify</groupId>

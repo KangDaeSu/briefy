@@ -6,7 +6,6 @@
 ---
 
 ## Phase 1 — 인프라 & 기초 설정
-
 ### 1-1. 프로젝트 초기화
 - [x] Spring Boot 4.0 프로젝트 생성 (Maven, Java 21)
   - 의존성: Spring Web, Spring Data JPA, Spring AI, PostgreSQL Driver, Spring Security
@@ -30,18 +29,17 @@
 ---
 
 ## Phase 2 — 핵심 도메인 구현
-
 ### 2-1. 일정 관리 (Schedule)
-- [ ] CRUD API: `POST/GET/PATCH/DELETE /api/v1/schedules`
-- [ ] 반복 일정 로직 (RRULE 기반)
-- [ ] 일정 알림 스케줄러 (`@Scheduled`)
-- [ ] 프론트엔드: 캘린더 뷰 (FullCalendar 또는 자체 구현)
+- [x] CRUD API: `POST/GET/PATCH/DELETE /api/v1/schedules`
+- [x] 반복 일정 로직 (RRULE 기반, biweekly 0.6.8)
+- [x] 일정 알림 스케줄러 (`@Scheduled`, 5분 주기 로그)
+- [x] 프론트엔드: 캘린더 뷰 (자체 구현, 월간 그리드)
 
 ### 2-2. 뉴스 수집 파이프라인
-- [ ] News API 연동 (NewsAPI.org 또는 RSS 크롤러)
-- [ ] 기사 청크 분할 전략 결정 (문단 기준, 최대 512 토큰)
-- [ ] 임베딩 배치 처리 (`@Scheduled` + 비동기)
-- [ ] 중복 기사 필터링 (URL 해시 기준)
+- [x] News API 연동 (NewsAPI.org, RestClient)
+- [x] 기사 청크 분할 전략 결정 (문단 기준, 512 토큰, TokenTextSplitter)
+- [x] 임베딩 배치 처리 (`@Scheduled` + 배치 20건, 기사별 독립 트랜잭션)
+- [x] 중복 기사 필터링 (SHA-256 URL 해시, DB UNIQUE 제약)
 
 ### 2-3. RAG 브리핑 생성
 - [ ] `QuestionAnswerAdvisor` 또는 커스텀 RAG 체인 구현
@@ -53,7 +51,6 @@
 ---
 
 ## Phase 3 — 사용자 기능
-
 ### 3-1. 인증/인가
 - [ ] JWT 기반 로그인 (Spring Security 6)
 - [ ] OAuth2 소셜 로그인 (Google)
@@ -71,7 +68,6 @@
 ---
 
 ## Phase 4 — 품질 & 운영
-
 ### 4-1. 테스트
 - [ ] 단위 테스트: 서비스 레이어 (Mockito)
 - [ ] 통합 테스트: RAG 파이프라인 (Testcontainers + PostgreSQL)
@@ -96,8 +92,10 @@
 | Phase 1-1   | 완료      |
 | Phase 1-2   | 완료      |
 | Phase 1-3   | 완료      |
-| Phase 2     | 미시작    |
+| Phase 2-1   | 완료      |
+| Phase 2-2   | 완료      |
+| Phase 2-3   | 미시작    |
 | Phase 3     | 미시작    |
 | Phase 4     | 미시작    |
 
-> 마지막 업데이트: 2026-05-13
+> 마지막 업데이트: 2026-05-15

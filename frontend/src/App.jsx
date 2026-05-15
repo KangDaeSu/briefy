@@ -1,12 +1,15 @@
+import CalendarPage from './pages/CalendarPage'
 import './App.css'
 
-function App() {
+export default function App() {
   return (
     <div className="app">
-      <h1>briefy</h1>
-      <p>지능형 일정 관리 + RAG 뉴스 요약 서비스</p>
+      <nav className="app-nav">
+        <span className="app-logo">briefy</span>
+      </nav>
+      <main>
+        <CalendarPage />
+      </main>
     </div>
   )
 }
-
-export default App

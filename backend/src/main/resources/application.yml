@@ -57,6 +57,12 @@ management:
     health:
       show-details: when-authorized
 
+news:
+  api:
+    key: ${NEWS_API_KEY:}
+    language: ko
+    page-size: 20
+
 logging:
   level:
     com.briefy: DEBUG

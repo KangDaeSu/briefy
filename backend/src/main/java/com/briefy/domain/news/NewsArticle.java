@@ -41,6 +41,10 @@ public class NewsArticle {
 
     @Nullable
     @Column(columnDefinition = "text")
+    private String description;
+
+    @Nullable
+    @Column(columnDefinition = "text")
     private String content;
 
     @Column(name = "embedded", nullable = false)
@@ -92,9 +96,13 @@ public class NewsArticle {
     @NonNull
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
+    @Nullable
+    public String getDescription() { return description; }
+
     public void setSource(@Nullable String source) { this.source = source; }
     public void setAuthor(@Nullable String author) { this.author = author; }
     public void setPublishedAt(@Nullable OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
+    public void setDescription(@Nullable String description) { this.description = description; }
     public void setContent(@Nullable String content) { this.content = content; }
     public void markEmbedded() { this.embedded = true; }
 }
