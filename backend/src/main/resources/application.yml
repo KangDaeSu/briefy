@@ -2,8 +2,8 @@ spring:
   application:
     name: briefy
 
-  config:
-    import: "optional:file:.env[.properties]"
+#  config:
+#    import: "optional:file:.env[.properties]"
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
