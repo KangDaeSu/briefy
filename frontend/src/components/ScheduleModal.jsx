@@ -22,6 +22,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) { setForm(INITIAL); setError(null); return }
     if (schedule) {
@@ -43,6 +44,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
       }))
     }
   }, [open, schedule, defaultDate])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!open) return null
 

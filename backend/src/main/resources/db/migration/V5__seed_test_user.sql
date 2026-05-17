@@ -1,10 +1,10 @@
--- 개발용 테스트 사용자 (Phase 3 인증 구현 전까지 사용)
-INSERT INTO users (id, email, name, interests, created_at, updated_at)
+-- 개발용 테스트 사용자 (V7 이후 provider/provider_id 컬럼이 추가되므로 생략 가능)
+-- Phase 3 인증 구현 완료 — 이 시드는 기존 데이터 호환용으로만 유지
+INSERT INTO users (id, email, name, created_at, updated_at)
 VALUES (
     '11111111-1111-1111-1111-111111111111',
     'test@briefy.dev',
     'Test User',
-    '["기술", "경제", "스포츠"]',
     now(),
     now()
 ) ON CONFLICT DO NOTHING;

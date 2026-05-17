@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>  <!-- ✅ 4.0.0 → 4.0.6 -->
+        <version>4.0.6</version>
         <relativePath/>
     </parent>
 
@@ -15,33 +15,20 @@
     <artifactId>briefy-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>briefy-backend</name>
-    <description>지능형 일정 관리 + RAG 뉴스 요약 서비스</description>
+    <description>일정 관리 서비스</description>
 
     <properties>
         <java.version>21</java.version>
-        <!-- ✅ 1.0.0 → 2.0.0-M6 (Spring Boot 4.0 전용) -->
-        <spring-ai.version>2.0.0-M6</spring-ai.version>
         <jspecify.version>1.0.0</jspecify.version>
         <testcontainers.version>2.0.5</testcontainers.version>
+        <jjwt.version>0.12.6</jjwt.version>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-bom</artifactId>
-                <version>${spring-ai.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId> <!-- Boot 4.0 표준명 -->
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <!-- Data JPA -->
@@ -56,6 +43,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- OAuth2 Client (Google 로그인) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -68,24 +61,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- ✅ Spring AI - OpenAI (2.0 아티팩트명) -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-openai</artifactId>
-        </dependency>
-
-        <!-- ✅ Spring AI - PGVector (2.0 아티팩트명) -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
-        </dependency>
-
-        <!-- ✅ Spring AI - Advisors (RAG용, Initializr에서 추가) -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-advisors-vector-store</artifactId>
-        </dependency>
-
         <!-- PostgreSQL JDBC Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -93,7 +68,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ✅ Flyway (Boot 4.0 starter 방식) -->
+        <!-- Flyway -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
@@ -101,6 +76,25 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- JWT (JJWT 0.12.x) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- RRULE 파싱 (iCalendar 반복 일정) -->
@@ -128,7 +122,7 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Testcontainers: pgvector 통합 테스트용 -->
+        <!-- Testcontainers: PostgreSQL 통합 테스트용 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
@@ -156,22 +150,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- ✅ M6 다운로드에 필요 -->
-    <repositories>
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-            <snapshots><enabled>false</enabled></snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-            <snapshots><enabled>false</enabled></snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 </project>

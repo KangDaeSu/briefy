@@ -1,14 +1,22 @@
 package com.briefy.domain.schedule;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, UUID> {
+
+    @Query("SELECT s FROM Schedule s JOIN FETCH s.user WHERE s.id = :id AND s.user.id = :userId")
+    Optional<Schedule> findByIdAndUserId(
+        @Param("id") UUID id,
+        @Param("userId") UUID userId
+    );
 
     @Query("""
         SELECT s FROM Schedule s
@@ -47,6 +55,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, UUID> {
         """)
     List<Schedule> findUpcoming(
         @Param("from") OffsetDateTime from,
-        @Param("to") OffsetDateTime to
+        @Param("to") OffsetDateTime to,
+        Pageable pageable
     );
 }

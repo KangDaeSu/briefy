@@ -16,7 +16,7 @@ class BriefyApplicationTests {
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("pgvector/pgvector:pg18");
+            new PostgreSQLContainer<>("postgres:18");
 
     @Test
     void contextLoads() {

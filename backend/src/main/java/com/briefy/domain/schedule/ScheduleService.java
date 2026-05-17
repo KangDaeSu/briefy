@@ -6,10 +6,9 @@ import biweekly.component.VEvent;
 import com.briefy.api.dto.ScheduleEventResponse;
 import com.briefy.api.dto.ScheduleRequest;
 import com.briefy.api.dto.ScheduleResponse;
-import com.briefy.api.dto.ScheduleUpdateRequest;
 import com.briefy.common.BriefyErrorCode;
 import com.briefy.common.exception.BriefyException;
-import com.briefy.domain.user.UserRepository;
+import com.briefy.domain.user.UserService;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,35 +36,31 @@ public class ScheduleService {
         DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
 
     private final ScheduleRepository scheduleRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository) {
+    public ScheduleService(ScheduleRepository scheduleRepository, UserService userService) {
         this.scheduleRepository = scheduleRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Transactional
     public ScheduleResponse create(UUID userId, ScheduleRequest req) {
-        var user = userRepository.findById(userId)
-            .orElseThrow(() -> new BriefyException(BriefyErrorCode.USER_NOT_FOUND));
-        var schedule = new Schedule(user, req.title(), req.startTime(), req.endTime());
-        schedule.update(req.title(), req.description(), req.startTime(), req.endTime(), req.rrule());
+        var user = userService.findById(userId);
+        var schedule = new Schedule(user, req.title(), req.description(),
+                req.startTime(), req.endTime(), req.rrule());
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
     public ScheduleResponse getOne(UUID userId, UUID scheduleId) {
-        var schedule = findOwnedSchedule(userId, scheduleId);
-        return ScheduleResponse.from(schedule);
+        return ScheduleResponse.from(findOwnedSchedule(userId, scheduleId));
     }
 
     public List<ScheduleEventResponse> listEvents(UUID userId, OffsetDateTime from, OffsetDateTime to) {
         List<ScheduleEventResponse> events = new ArrayList<>();
 
-        // 비반복 일정: 범위와 겹치는 것들
         scheduleRepository.findNonRecurringByUserAndRange(userId, from, to)
             .forEach(s -> events.add(ScheduleEventResponse.from(s)));
 
-        // 반복 일정: RRULE 확장
         scheduleRepository.findRecurringByUser(userId, to).forEach(s -> {
             Duration duration = Duration.between(s.getStartTime(), s.getEndTime());
             expandRrule(s.getRrule(), s.getStartTime(), from, to).forEach(occ ->
@@ -78,7 +73,7 @@ public class ScheduleService {
     }
 
     @Transactional
-    public ScheduleResponse update(UUID userId, UUID scheduleId, ScheduleUpdateRequest req) {
+    public ScheduleResponse update(UUID userId, UUID scheduleId, ScheduleRequest req) {
         var schedule = findOwnedSchedule(userId, scheduleId);
         schedule.update(req.title(), req.description(), req.startTime(), req.endTime(), req.rrule());
         return ScheduleResponse.from(schedule);
@@ -86,17 +81,16 @@ public class ScheduleService {
 
     @Transactional
     public void delete(UUID userId, UUID scheduleId) {
-        var schedule = findOwnedSchedule(userId, scheduleId);
-        scheduleRepository.delete(schedule);
+        scheduleRepository.delete(findOwnedSchedule(userId, scheduleId));
     }
 
     private Schedule findOwnedSchedule(UUID userId, UUID scheduleId) {
-        var schedule = scheduleRepository.findById(scheduleId)
-            .orElseThrow(() -> new BriefyException(BriefyErrorCode.SCHEDULE_NOT_FOUND));
-        if (!schedule.getUser().getId().equals(userId)) {
-            throw new BriefyException(BriefyErrorCode.FORBIDDEN);
-        }
-        return schedule;
+        return scheduleRepository.findByIdAndUserId(scheduleId, userId).orElseThrow(() -> {
+            BriefyErrorCode code = scheduleRepository.existsById(scheduleId)
+                    ? BriefyErrorCode.FORBIDDEN
+                    : BriefyErrorCode.SCHEDULE_NOT_FOUND;
+            return new BriefyException(code);
+        });
     }
 
     private List<OffsetDateTime> expandRrule(@Nullable String rrule, OffsetDateTime dtStart,

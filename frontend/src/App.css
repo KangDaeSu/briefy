@@ -18,6 +18,7 @@ body {
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
 }
 
@@ -26,6 +27,41 @@ body {
   font-weight: 800;
   letter-spacing: -0.5px;
   color: #111827;
+  text-decoration: none;
+}
+.app-logo:hover { color: #374151; }
+
+.app-nav__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-nav__name {
+  font-size: 14px;
+  color: #374151;
+  text-decoration: none;
+}
+.app-nav__name:hover { text-decoration: underline; }
+
+.app-nav__logout {
+  font-size: 13px;
+  color: #6b7280;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.app-nav__logout:hover { background: #f9fafb; }
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 main {

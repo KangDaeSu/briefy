@@ -1,5 +1,7 @@
 package com.briefy.domain.schedule;
 
+import com.briefy.common.BriefyErrorCode;
+import com.briefy.common.exception.BriefyException;
 import com.briefy.domain.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -54,15 +56,18 @@ public class Schedule {
     protected Schedule() {
     }
 
-    public Schedule(@NonNull User user, @NonNull String title,
-                    @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime) {
+    public Schedule(@NonNull User user, @NonNull String title, @Nullable String description,
+                    @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
+                    @Nullable String rrule) {
         if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("endTime must be after startTime");
+            throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
         this.user = user;
         this.title = title;
+        this.description = description;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.rrule = rrule;
     }
 
     @PrePersist
@@ -106,7 +111,7 @@ public class Schedule {
                        @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
                        @Nullable String rrule) {
         if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("endTime must be after startTime");
+            throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
         this.title = title;
         this.description = description;

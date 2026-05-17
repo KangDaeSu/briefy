@@ -1,15 +1,11 @@
 package com.briefy.domain.user;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -33,9 +29,13 @@ public class User {
     private String name;
 
     @NonNull
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
-    private List<String> interests = new ArrayList<>();
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AuthProvider provider;
+
+    @Nullable
+    @Column(name = "provider_id")
+    private String providerId;
 
     @NonNull
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -48,9 +48,12 @@ public class User {
     protected User() {
     }
 
-    public User(@NonNull String email, @NonNull String name) {
+    public User(@NonNull String email, @NonNull String name,
+                @NonNull AuthProvider provider, @Nullable String providerId) {
         this.email = email;
         this.name = name;
+        this.provider = provider;
+        this.providerId = providerId;
     }
 
     @PrePersist
@@ -76,7 +79,10 @@ public class User {
     public String getName() { return name; }
 
     @NonNull
-    public List<String> getInterests() { return interests; }
+    public AuthProvider getProvider() { return provider; }
+
+    @Nullable
+    public String getProviderId() { return providerId; }
 
     @NonNull
     public OffsetDateTime getCreatedAt() { return createdAt; }
@@ -88,11 +94,12 @@ public class User {
         this.name = name;
     }
 
-    public void updateInterests(@NonNull List<String> interests) {
-        this.interests = new ArrayList<>(interests);
-    }
-
     public void updatePasswordHash(@Nullable String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public void linkOAuth(@NonNull AuthProvider provider, @NonNull String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
     }
 }

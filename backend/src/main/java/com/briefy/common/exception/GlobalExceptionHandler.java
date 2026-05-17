@@ -18,9 +18,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BriefyException.class)
     public ResponseEntity<ApiResponse<?>> handleBriefyException(BriefyException ex) {
         HttpStatus status = switch (ex.getErrorCode()) {
-            case SCHEDULE_NOT_FOUND, NEWS_NOT_FOUND, BRIEF_NOT_FOUND, USER_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case SCHEDULE_NOT_FOUND, USER_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case FORBIDDEN -> HttpStatus.FORBIDDEN;
-            case UNAUTHORIZED, INVALID_TOKEN -> HttpStatus.UNAUTHORIZED;
+            case UNAUTHORIZED, INVALID_TOKEN, INVALID_CREDENTIALS -> HttpStatus.UNAUTHORIZED;
+            case USER_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case SCHEDULE_OVERLAP -> HttpStatus.CONFLICT;
+            case SCHEDULE_INVALID_TIME -> HttpStatus.BAD_REQUEST;
             default -> HttpStatus.BAD_REQUEST;
         };
         return ResponseEntity.status(status).body(ApiResponse.error(ex.getErrorCode()));

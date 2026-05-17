@@ -7,8 +7,9 @@ import './CalendarPage.css'
 const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월',
   '7월', '8월', '9월', '10월', '11월', '12월']
 
+const today = new Date()
+
 export default function CalendarPage() {
-  const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [events, setEvents] = useState([])
@@ -16,21 +17,28 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [modal, setModal] = useState({ open: false, schedule: null })
 
-  const fetchEvents = useCallback(async (y, m) => {
+  const fetchEvents = useCallback(async (y, m, signal) => {
     setLoading(true)
     try {
-      const from = new Date(y, m, 1).toISOString()
-      const to = new Date(y, m + 1, 0, 23, 59, 59).toISOString()
-      const res = await schedulesApi.list(from, to)
+      // UTC 경계를 명시적으로 지정해 로컬 시간 변환으로 인한 날짜 이탈 방지
+      const from = new Date(Date.UTC(y, m, 1)).toISOString()
+      const to   = new Date(Date.UTC(y, m + 1, 1)).toISOString()
+      const res = await schedulesApi.list(from, to, { signal })
       setEvents(res.data ?? [])
     } catch (e) {
-      console.error('일정 조회 실패', e)
+      if (e.name !== 'AbortError') console.error('일정 조회 실패', e)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { fetchEvents(year, month) }, [year, month, fetchEvents])
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchEvents(year, month, controller.signal)
+    return () => controller.abort()
+  }, [year, month, fetchEvents])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11) }
@@ -41,7 +49,6 @@ export default function CalendarPage() {
     else setMonth(m => m + 1)
   }
 
-  // 선택된 날짜의 이벤트 목록
   const selectedEvents = selectedDate
     ? events.filter(ev => {
         const d = new Date(ev.startTime)
@@ -53,7 +60,7 @@ export default function CalendarPage() {
 
   async function handleSave(data) {
     if (modal.schedule) {
-      await schedulesApi.update(modal.schedule.scheduleId ?? modal.schedule.id, data)
+      await schedulesApi.update(modal.schedule.id, data)
     } else {
       await schedulesApi.create(data)
     }
@@ -62,7 +69,7 @@ export default function CalendarPage() {
 
   async function handleDelete() {
     if (modal.schedule) {
-      await schedulesApi.delete(modal.schedule.scheduleId ?? modal.schedule.id)
+      await schedulesApi.delete(modal.schedule.id)
       await fetchEvents(year, month)
     }
   }
@@ -110,8 +117,8 @@ export default function CalendarPage() {
             <p className="day-panel__empty">일정이 없습니다. <button className="link-btn" onClick={openCreate}>추가하기</button></p>
           ) : (
             <ul className="day-panel__list">
-              {selectedEvents.map((ev, i) => (
-                <li key={i} className="day-event" onClick={() => openEdit(ev)}>
+              {selectedEvents.map((ev) => (
+                <li key={ev.id} className="day-event" onClick={() => openEdit(ev)}>
                   <div className={`day-event__bar ${ev.recurring ? 'day-event__bar--recurring' : ''}`} />
                   <div className="day-event__body">
                     <span className="day-event__title">{ev.title}</span>

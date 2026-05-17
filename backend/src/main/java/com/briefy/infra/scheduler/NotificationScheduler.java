@@ -3,6 +3,7 @@ package com.briefy.infra.scheduler;
 import com.briefy.domain.schedule.ScheduleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,7 @@ public class NotificationScheduler {
     public void checkUpcomingSchedules() {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime in30min = now.plusMinutes(30);
-        var upcoming = scheduleRepository.findUpcoming(now, in30min);
+        var upcoming = scheduleRepository.findUpcoming(now, in30min, PageRequest.of(0, 200));
         if (!upcoming.isEmpty()) {
             log.info("[알림] 30분 내 시작 일정 {}건", upcoming.size());
             upcoming.forEach(s ->

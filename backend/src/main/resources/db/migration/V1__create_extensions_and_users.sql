@@ -1,5 +1,3 @@
--- pgvector: vector 타입 및 유사도 연산자 제공
-CREATE EXTENSION IF NOT EXISTS vector;
 -- btree_gist: UUID 컬럼을 GiST 인덱스에 포함하기 위해 필요 (schedules 중복 방지 제약)
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 

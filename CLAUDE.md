@@ -1,43 +1,59 @@
 # briefy
 
-지능형 일정 관리 + RAG 뉴스 요약 서비스.
-사용자의 관심사 기반으로 뉴스를 벡터 검색하여 요약하고, 일정과 연동해 브리핑을 제공한다.
+React 19 + Spring Boot 4.0 기반 일정 관리 서비스.
+반복 일정(RRULE), 일정 중복 방지, 알림 스케줄러를 제공한다.
 
 ## Tech Stack
 
 | Layer     | Technology                          |
 |-----------|-------------------------------------|
-| Frontend  | React 19, TypeScript, Vite          |
-| Backend   | Spring Boot 4.0.6, Spring AI        |
-| Database  | PostgreSQL 18 + pgvector 0.8.2      |
-| AI        | Spring AI (RAG pipeline, embedding) |
+| Frontend  | React 19, JavaScript (JSX), Vite 8  |
+| Backend   | Spring Boot 4.0.6                   |
+| Database  | PostgreSQL 18                       |
+| Migration | Flyway                              |
+| Testing   | Testcontainers 2.0.5, JUnit 5       |
 
 ## Project Structure
 
 ```
 briefy/
-├── frontend/          # React 19 앱 (Vite)
+├── frontend/                       # React 19 SPA (Vite)
 │   ├── src/
+│   │   ├── api/
+│   │   │   ├── client.js           # fetch 래퍼 (get/post/patch/delete)
+│   │   │   └── schedules.js        # 일정 API 함수
 │   │   ├── components/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   └── api/
+│   │   │   ├── MonthCalendar.jsx
+│   │   │   └── ScheduleModal.jsx
+│   │   └── pages/
+│   │       └── CalendarPage.jsx
 │   └── package.json
-├── backend/           # Spring Boot 4.0 서버
+├── backend/                        # Spring Boot 4.0 서버
 │   ├── src/main/java/com/briefy/
+│   │   ├── BriefyApplication.java
+│   │   ├── common/
+│   │   │   ├── ApiResponse.java         # 공통 응답 wrapper (record)
+│   │   │   ├── BriefyErrorCode.java     # 에러 코드 enum
+│   │   │   └── exception/
+│   │   │       ├── BriefyException.java
+│   │   │       └── GlobalExceptionHandler.java
 │   │   ├── domain/
-│   │   │   ├── schedule/   # 일정 도메인
-│   │   │   ├── news/       # 뉴스 수집/임베딩 도메인
-│   │   │   └── brief/      # RAG 브리핑 도메인
+│   │   │   ├── user/                    # User 엔티티 + Repository
+│   │   │   └── schedule/                # Schedule 엔티티, Service, Repository
 │   │   ├── infra/
-│   │   │   ├── ai/         # Spring AI 설정 및 RAG 파이프라인
-│   │   │   └── vector/     # pgvector 연동
-│   │   └── api/            # REST 컨트롤러
+│   │   │   ├── scheduler/               # NotificationScheduler (@Scheduled)
+│   │   │   └── security/                # SecurityConfig
+│   │   └── api/                         # REST 컨트롤러 + DTO
+│   │       ├── ScheduleController.java
+│   │       └── dto/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   └── db/migration/               # Flyway V1, V2, V5
 │   └── pom.xml
-├── tasks/
-│   ├── plan.md        # 구현 계획
-│   └── lessons.md     # 삽질 기록
-└── CLAUDE.md
+└── tasks/
+    ├── plan.md                     # 구현 계획
+    ├── lessons.md                  # 삽질 기록
+    └── skills.md                   # 이 프로젝트 작업 방법 가이드
 ```
 
 ## Commands
@@ -48,7 +64,7 @@ cd frontend
 npm install
 npm run dev          # 개발 서버 (localhost:5173)
 npm run build
-npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint
 ```
 
 ### Backend
@@ -61,56 +77,76 @@ cd backend
 
 ### Database
 ```bash
-# pgvector 확장 활성화 (최초 1회)
-psql -U postgres -d briefy -c "CREATE EXTENSION IF NOT EXISTS vector;"
+# Docker Compose로 PostgreSQL 18 기동
+docker compose up -d
+
+# DB 초기화 (스키마 변경 시)
+docker compose down -v && docker compose up -d
 ```
 
 ## Key Conventions
 
 ### API Design
-- REST 엔드포인트: Spring Boot 4.0의 `@ApiVersion` 어노테이션으로 버전 관리 (예: `/v1/schedules`)
-- 모든 응답은 `ApiResponse<T>` wrapper 사용
-- 에러 코드는 `BriefyErrorCode` enum으로 관리
+- REST 엔드포인트: `@RequestMapping("/api/v1/...")` 경로 접두사로 버전 관리
+- 모든 응답은 `ApiResponse<T>` record wrapper 사용: `ApiResponse.ok(data)`, `ApiResponse.error(errorCode)`
+- 에러 코드는 `BriefyErrorCode` enum으로 관리 (코드 + 메시지 쌍)
+- 현재 인증 미구현(Phase 3) — `X-User-Id` 헤더로 임시 사용자 식별
 
-### RAG Pipeline
-1. 뉴스 수집 → 청크 분할 → 임베딩 생성 (Spring AI EmbeddingModel)
-2. pgvector에 저장 (`VectorStore` 구현체)
-3. 쿼리 시 유사도 검색 → ChatModel에 컨텍스트 주입 → 브리핑 생성
+### Domain Layer
+- JPA Entity: 기본 생성자 `protected`, 공개 생성자로 필수 필드 강제, 도메인 메서드(update 등) 포함
+- PK: `@Id @UuidGenerator(style = UuidGenerator.Style.TIME)` — Hibernate 6.x UUIDv7 생성
+- Service: 클래스에 `@Transactional(readOnly = true)`, 쓰기 메서드에만 `@Transactional`
+- Null 안전성: 모든 필드/파라미터/리턴값에 `@NonNull` / `@Nullable` (org.jspecify) 명시
 
-### Vector Schema
-```sql
-CREATE TABLE news_embeddings (
-    -- UUIDv7: 시간 순 정렬 가능 → B-tree 인덱스 단편화 최소화, 삽입 성능 개선
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    content     TEXT NOT NULL,
-    embedding   vector(3072),  -- OpenAI text-embedding-3-large 기준
-    metadata    JSONB,
-    created_at  TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX ON news_embeddings USING hnsw (embedding vector_cosine_ops);
-```
+### Repeat Schedule (RRULE)
+- iCalendar RRULE 형식으로 저장 (예: `FREQ=WEEKLY;BYDAY=MO,WE,FR`)
+- `biweekly` 0.6.8 라이브러리로 파싱 및 발생 일시 확장 (`ScheduleService.expandRrule`)
+- 범위 조회 시 비반복 일정 + 반복 일정 확장 후 합산, `startTime` 기준 정렬
 
 ### Database Conventions
-- PK: 모든 테이블의 Primary Key는 UUIDv7 사용 (`uuid_generate_v7()`)
-- Schedule: 일정 중복 방지를 위해 DB 엔진 레벨에서 `WITHOUT OVERLAPS` 제약 조건 필수 적용
+- **UUIDv7**: PG18 네이티브 함수는 `uuidv7()` — `uuid_generate_v7()`는 PG18에 없음
+- **일정 중복 방지**: GiST EXCLUDE 제약 (`tstzrange(start_time, end_time, '[)') WITH &&`)
+  `btree_gist` extension 필수 (V1 마이그레이션에서 활성화)
+- **스키마 검증**: `ddl-auto: validate` — `CHAR(n)` 대신 `VARCHAR(n)` 사용 (bpchar vs varchar 불일치 방지)
 
-### Backend Conventions
-- 런타임 NullPointerException 방지를 위해 `org.jspecify.annotations` 기반의 엄격한 Null 체크 수행
+### Spring Boot 4.0 Conventions
+- `@MockBean` / `@SpyBean` 제거됨 → `@MockitoBean` / `@MockitoSpyBean` 사용
+  (`org.springframework.test.context.bean.override.mockito`)
+- Web starter: `spring-boot-starter-webmvc`
+- Flyway starter: `spring-boot-starter-flyway` + `flyway-database-postgresql` 별도 추가
+- Java 21 + Virtual Threads (Loom) 기본 활성화
 
-### Frontend State
-- 데이터 페칭: React 19 Server Components (RSC) 및 `use()` Hook 최우선 사용
-- 폼 및 상태 변이: `useActionState`와 `useFormStatus`를 활용한 Server Actions 및 낙관적 업데이트(Optimistic UI) 구현
-- 클라이언트 상태: 상호작용이 필수적인 컴포넌트(`'use client'`)에 한해 최소한의 `useState` 사용
+### Testcontainers 2.x Conventions
+- 아티팩트: `testcontainers-postgresql` (1.x의 `postgresql`과 다름)
+- JUnit 5 연동: `testcontainers-junit-jupiter` 별도 아티팩트 추가 필수
+- Spring Boot 통합: `spring-boot-testcontainers` starter + `@ServiceConnection`
+
+### Frontend Conventions
+- 프레임워크: Vite SPA (Next.js/RSC 없음) — 모든 페이지는 CSR
+- 언어: JavaScript (JSX) — TypeScript 미도입
+- 데이터 페칭: `useState` + `useEffect` + `fetch` 래퍼 (`src/api/client.js`)
+- 상태 관리: `useState` (외부 상태 라이브러리 없음)
+- API 베이스: `VITE_API_BASE_URL` env 변수
+- 인증 헤더: `X-User-Id: <UUID>` (Phase 3 JWT 구현 전 임시)
 
 ## Environment Variables
 
 ### Backend (`backend/.env` or `application-local.properties`)
 ```
-OPENAI_API_KEY=...
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/briefy
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=...
-NEWS_API_KEY=...
+SPRING_DATASOURCE_USERNAME=briefy
+SPRING_DATASOURCE_PASSWORD=briefy
+
+# JWT: Base64-encoded 256-bit 이상 랜덤 키 (개발용 기본값이 있으나 프로덕션에서 교체 필수)
+JWT_SECRET=<base64-encoded-256bit-key>
+
+# Google OAuth2 (Google Cloud Console에서 발급)
+# 승인된 리디렉션 URI: http://localhost:8080/login/oauth2/code/google
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+# 프론트엔드 URL (CORS + OAuth2 리디렉션 대상)
+FRONTEND_URL=http://localhost:5173
 ```
 
 ### Frontend (`frontend/.env.local`)
@@ -120,27 +156,20 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ## Reference Docs
 
-코드 작업 시 아래 공식 문서를 WebFetch로 직접 참조한다.
+코드 작업 시 아래 공식 문서를 Context7 MCP 또는 WebFetch로 직접 참조한다.
 
-| 기술                                | 문서 URL                                                                          |
-|-----------------------------------|---------------------------------------------------------------------------------|
-| Spring AI 2.x                     | https://docs.spring.io/spring-ai/reference/                                     |
-| Spring AI — PgVectorStore         | https://docs.spring.io/spring-ai/reference/api/vectordbs/pgvector.html          |
-| Spring AI — OpenAI Embeddings     | https://docs.spring.io/spring-ai/reference/api/embeddings/openai-embeddings.html |
-| Spring AI — ChatClient / Advisors | https://docs.spring.io/spring-ai/reference/api/chatclient.html                  |
-| Spring Boot 4.0                   | https://docs.spring.io/spring-boot/reference/                                   |
-| Spring Boot — Testcontainers      | https://docs.spring.io/spring-boot/reference/testing/testcontainers.html        |
-| pgvector                          | https://github.com/pgvector/pgvector                                            |
-| Flyway                            | https://documentation.red-gate.com/flyway                                       |
-| React 19                          | https://react.dev                                                               |
-| Vite                              | https://vite.dev/guide/                                                         |
-| jspecify                          | https://jspecify.dev/docs/user-guide                                            |
-| PostgreSQL 18                     | https://www.postgresql.org/docs/18/                                             |
+| 기술                           | 문서 URL                                                             |
+|------------------------------|----------------------------------------------------------------------|
+| Spring Boot 4.0              | https://docs.spring.io/spring-boot/reference/                        |
+| Spring Boot — Testcontainers | https://docs.spring.io/spring-boot/reference/testing/testcontainers.html |
+| Flyway                       | https://documentation.red-gate.com/flyway                           |
+| React 19                     | https://react.dev                                                    |
+| Vite                         | https://vite.dev/guide/                                              |
+| jspecify                     | https://jspecify.dev/docs/user-guide                                 |
+| PostgreSQL 18                | https://www.postgresql.org/docs/18/                                  |
 
 ## Development Notes
 
-- Spring Boot 4.0은 Java 21+ 필수, virtual threads (Loom) 기본 활성화
-- pgvector 0.8.2는 HNSW 인덱스를 기본 권장, IVFFlat보다 검색 품질 우수
-- Spring AI의 `VectorStore`는 `PgVectorStore` 구현체 사용
-- React 19의 `use()` hook과 Suspense를 데이터 페칭에 적극 활용
-- 뉴스 임베딩 배치 처리는 Spring Batch 또는 `@Scheduled` + 비동기 처리
+- **최신 버전 우선**: Spring Boot 4.0은 이전 버전과 API가 달라진 곳이 많다. 코드 작성 전 공식 문서 확인 또는 `use context7`로 최신 API 기준으로 생성
+- `ddl-auto: validate` — Flyway가 스키마 관리, Hibernate는 검증만 수행
+- V1, V2, V5 마이그레이션만 존재. DB 초기화 필요 시 `docker compose down -v`

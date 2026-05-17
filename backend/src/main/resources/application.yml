@@ -24,26 +24,24 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: false
-    repair-on-migrate: true
+    repair-on-migrate: false
 
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:dummy-key-for-local-dev}
-      embedding:
-        model: text-embedding-3-large    # Spring AI 2.x: .options. 제거
-        dimensions: 3072
-      chat:
-        options:
-          model: gpt-4o
-          temperature: 0.3
-    vectorstore:
-      pgvector:
-        table-name: news_embeddings
-        initialize-schema: false         # Flyway가 스키마 관리
-        index-type: HNSW                 # Spring AI 2.x enum: 대문자
-        distance-type: COSINE_DISTANCE   # Spring AI 2.x enum: 대문자
-        dimensions: 3072
-        schema-validation: false         # 커스텀 스키마 (created_at 등 추가 컬럼) 허용
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy-local-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-local-client-secret}
+            scope: email, profile
+
+jwt:
+  # Base64-encoded 256-bit key (개발용 기본값 — 프로덕션에서 반드시 교체)
+  secret: ${JWT_SECRET:YnJpZWZ5LWp3dC1zZWNyZXQta2V5LWZvci1kZXYtb2s=}
+  expiration-ms: 604800000  # 7일
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
 server:
   port: 8080
@@ -57,13 +55,6 @@ management:
     health:
       show-details: when-authorized
 
-news:
-  api:
-    key: ${NEWS_API_KEY:}
-    language: ko
-    page-size: 20
-
 logging:
   level:
-    com.briefy: DEBUG
-    org.springframework.ai: INFO
+    com.briefy: INFO

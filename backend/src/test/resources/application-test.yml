@@ -1,13 +1,9 @@
 spring:
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/briefy}
-    username: ${SPRING_DATASOURCE_USERNAME:briefy}
-    password: ${SPRING_DATASOURCE_PASSWORD:briefy}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-  ai:
-    openai:
-      api-key: test-dummy-key
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope: email, profile

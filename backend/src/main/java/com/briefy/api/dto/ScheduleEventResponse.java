@@ -11,7 +11,7 @@ import java.util.UUID;
  * 반복 일정은 각 발생 시점마다 별도의 이벤트로 확장된다.
  */
 public record ScheduleEventResponse(
-    UUID scheduleId,
+    UUID id,
     String title,
     @Nullable String description,
     OffsetDateTime startTime,
