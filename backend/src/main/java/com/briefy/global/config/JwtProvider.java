@@ -21,6 +21,8 @@ public class JwtProvider {
     private final long expirationMs;
 
     public JwtProvider(JwtProperties props) {
+        String s = props.secret();
+        System.out.println(">>> JWT secret length = " + (s == null ? "NULL" : s.length()));
         this.secretKey = Keys.hmacShaKeyFor(sha256(props.secret().strip()));
         this.expirationMs = props.expirationMs();
     }
