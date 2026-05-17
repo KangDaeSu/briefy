@@ -6,6 +6,7 @@ import com.briefy.domain.user.dto.UserResponse;
 import com.briefy.domain.user.dto.AuthResult;
 import com.briefy.domain.user.service.AuthService;
 import com.briefy.domain.user.service.UserService;
+import com.briefy.global.config.CookieProperties;
 import com.briefy.global.config.UserPrincipal;
 import com.briefy.global.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,10 +25,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final CookieProperties cookieProperties;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserService userService, CookieProperties cookieProperties) {
         this.authService = authService;
         this.userService = userService;
+        this.cookieProperties = cookieProperties;
     }
 
     @PostMapping("/register")
@@ -62,7 +65,8 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE,
                 ResponseCookie.from("jwt", token)
                         .httpOnly(true)
-                        .sameSite("Lax")
+                        .sameSite(cookieProperties.sameSite())
+                        .secure(cookieProperties.secure())
                         .path("/")
                         .maxAge(Duration.ofDays(7))
                         .build()
@@ -73,7 +77,8 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE,
                 ResponseCookie.from("jwt", "")
                         .httpOnly(true)
-                        .sameSite("Lax")
+                        .sameSite(cookieProperties.sameSite())
+                        .secure(cookieProperties.secure())
                         .path("/")
                         .maxAge(0)
                         .build()
