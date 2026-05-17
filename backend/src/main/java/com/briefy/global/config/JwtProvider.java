@@ -19,7 +19,7 @@ public class JwtProvider {
     private final long expirationMs;
 
     public JwtProvider(JwtProperties props) {
-        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(props.secret().strip()));
+        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(props.secret().strip()));
         this.expirationMs = props.expirationMs();
     }
 
