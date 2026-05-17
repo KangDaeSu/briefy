@@ -40,7 +40,7 @@ app:
     secure: ${COOKIE_SECURE:false}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 management:
   endpoints:
