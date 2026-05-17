@@ -79,6 +79,43 @@
   gap: 12px;
 }
 
+.time-input-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.time-input-wrap input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ampm-badge {
+  flex-shrink: 0;
+  padding: 0 8px;
+  height: 35px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.ampm-badge:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.ampm-badge--pm {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
 .required { color: #ef4444; }
 .hint { font-weight: 400; color: #9ca3af; }
 

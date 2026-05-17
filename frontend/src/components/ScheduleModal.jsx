@@ -4,9 +4,14 @@ import './ScheduleModal.css'
 function toLocalDatetimeValue(dateOrStr) {
   if (!dateOrStr) return ''
   const d = new Date(dateOrStr)
-  // datetime-local input은 "YYYY-MM-DDTHH:mm" 형식 필요
   const pad = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function getAmPm(datetimeStr) {
+  if (!datetimeStr) return null
+  const hour = parseInt(datetimeStr.split('T')[1]?.split(':')[0] ?? '0', 10)
+  return hour < 12 ? '오전' : '오후'
 }
 
 const INITIAL = {
@@ -49,6 +54,17 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   if (!open) return null
 
   const set = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
+
+  function toggleAmPm(key) {
+    setForm(prev => {
+      const val = prev[key]
+      if (!val) return prev
+      const [date, time] = val.split('T')
+      const [h, m] = time.split(':').map(Number)
+      const newHour = h < 12 ? Math.min(h + 12, 23) : h - 12
+      return { ...prev, [key]: `${date}T${String(newHour).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
+    })
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -103,11 +119,33 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           <div className="modal-row">
             <label>
               시작
-              <input type="datetime-local" value={form.startTime} onChange={set('startTime')} required />
+              <div className="time-input-wrap">
+                <input type="datetime-local" value={form.startTime} onChange={set('startTime')} required />
+                {form.startTime && (
+                  <button
+                    type="button"
+                    className={`ampm-badge${getAmPm(form.startTime) === '오후' ? ' ampm-badge--pm' : ''}`}
+                    onClick={() => toggleAmPm('startTime')}
+                  >
+                    {getAmPm(form.startTime)}
+                  </button>
+                )}
+              </div>
             </label>
             <label>
               종료
-              <input type="datetime-local" value={form.endTime} onChange={set('endTime')} required />
+              <div className="time-input-wrap">
+                <input type="datetime-local" value={form.endTime} onChange={set('endTime')} required />
+                {form.endTime && (
+                  <button
+                    type="button"
+                    className={`ampm-badge${getAmPm(form.endTime) === '오후' ? ' ampm-badge--pm' : ''}`}
+                    onClick={() => toggleAmPm('endTime')}
+                  >
+                    {getAmPm(form.endTime)}
+                  </button>
+                )}
+              </div>
             </label>
           </div>
           <label>

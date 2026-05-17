@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { authApi } from '../api/auth'
 import { usersApi } from '../api/users'
+import { saveAccount } from '../utils/savedAccounts'
 
 const AuthContext = createContext(null)
 
@@ -25,12 +26,14 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const res = await authApi.login({ email, password })
     setUser(res.data)
+    saveAccount({ email: res.data.email, name: res.data.name })
     return res.data
   }, [])
 
   const register = useCallback(async (email, name, password) => {
     const res = await authApi.register({ email, name, password })
     setUser(res.data)
+    saveAccount({ email: res.data.email, name: res.data.name })
     return res.data
   }, [])
 

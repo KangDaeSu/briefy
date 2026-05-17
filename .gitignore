@@ -17,6 +17,9 @@ replay_pid*
 # Spring Boot local config
 backend/src/main/resources/application-local.properties
 backend/src/main/resources/application-local.yml
+
+# Environment files (local dev — 커밋 금지)
+/.env
 backend/.env
 
 # =====================

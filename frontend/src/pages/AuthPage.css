@@ -88,29 +88,6 @@
 .auth-btn:hover:not(:disabled) { background: #0077ed; }
 .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.auth-btn--google {
-  background: #fff;
-  color: #1d1d1f;
-  border: 1.5px solid #d2d2d7;
-}
-.auth-btn--google:hover { background: #f5f5f7; }
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0;
-  color: #6e6e73;
-  font-size: 0.85rem;
-}
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #d2d2d7;
-}
-
 .auth-link {
   text-align: center;
   font-size: 0.875rem;
@@ -123,3 +100,111 @@
   font-weight: 500;
 }
 .auth-link a:hover { text-decoration: underline; }
+
+/* 계정 목록 */
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.account-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid #e5e5ea;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.account-item:hover {
+  border-color: #0071e3;
+  background: #f0f7ff;
+}
+
+.account-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0071e3;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1.2rem;
+}
+
+.account-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.account-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-email {
+  font-size: 0.8rem;
+  color: #6e6e73;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-remove {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  color: #aeaeb2;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+.account-remove:hover {
+  background: #f2f2f7;
+  color: #ff3b30;
+}
+
+/* 선택된 계정 표시 (비밀번호 입력 전) */
+.selected-account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1.5px solid #e5e5ea;
+  border-radius: 10px;
+  background: #f9f9fb;
+}
+
+/* 고스트 버튼 */
+.auth-btn--ghost {
+  background: transparent;
+  color: #0071e3;
+  border: 1.5px solid #d2d2d7;
+  font-size: 0.875rem;
+}
+.auth-btn--ghost:hover:not(:disabled) {
+  background: #f0f7ff;
+  border-color: #0071e3;
+}

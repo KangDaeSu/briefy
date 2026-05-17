@@ -15,7 +15,9 @@ React 19 + Spring Boot 4.0 기반 일정 관리 서비스.
 
 ## Project Structure
 
-```
+이 프로젝트는 **도메인형 패키지 구조(Feature-based Package Structure)**를 엄격하게 따릅니다. 코드는 크게 비즈니스 로직을 담는 `domain`과 공통 설정을 담는 `global`로 나뉩니다.
+
+```text
 briefy/
 ├── frontend/                       # React 19 SPA (Vite)
 │   ├── src/
@@ -31,21 +33,24 @@ briefy/
 ├── backend/                        # Spring Boot 4.0 서버
 │   ├── src/main/java/com/briefy/
 │   │   ├── BriefyApplication.java
-│   │   ├── common/
-│   │   │   ├── ApiResponse.java         # 공통 응답 wrapper (record)
-│   │   │   ├── BriefyErrorCode.java     # 에러 코드 enum
-│   │   │   └── exception/
-│   │   │       ├── BriefyException.java
-│   │   │       └── GlobalExceptionHandler.java
-│   │   ├── domain/
-│   │   │   ├── user/                    # User 엔티티 + Repository
-│   │   │   └── schedule/                # Schedule 엔티티, Service, Repository
-│   │   ├── infra/
-│   │   │   ├── scheduler/               # NotificationScheduler (@Scheduled)
-│   │   │   └── security/                # SecurityConfig
-│   │   └── api/                         # REST 컨트롤러 + DTO
-│   │       ├── ScheduleController.java
-│   │       └── dto/
+│   │   ├── domain/                 # ⭐️ 비즈니스 도메인별 패키지 (MVC 통합)
+│   │   │   ├── user/
+│   │   │   │   ├── controller/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── entity/
+│   │   │   │   ├── repository/
+│   │   │   │   └── service/
+│   │   │   └── schedule/
+│   │   │       ├── controller/     # ScheduleController.java
+│   │   │       ├── dto/            # request, response DTOs
+│   │   │       ├── entity/         # Schedule.java
+│   │   │       ├── repository/
+│   │   │       └── service/
+│   │   └── global/                 # ⭐️ 전역 공통/인프라 설정 (기존 common, infra 병합)
+│   │       ├── config/             # SecurityConfig.java 등
+│   │       ├── dto/                # ApiResponse.java (공통 응답 wrapper)
+│   │       ├── error/              # BriefyErrorCode, BriefyException, GlobalExceptionHandler
+│   │       └── scheduler/          # NotificationScheduler (@Scheduled)
 │   ├── src/main/resources/
 │   │   ├── application.yml
 │   │   └── db/migration/               # Flyway V1, V2, V5
@@ -54,8 +59,6 @@ briefy/
     ├── plan.md                     # 구현 계획
     ├── lessons.md                  # 삽질 기록
     └── skills.md                   # 이 프로젝트 작업 방법 가이드
-```
-
 ## Commands
 
 ### Frontend
@@ -131,7 +134,7 @@ docker compose down -v && docker compose up -d
 
 ## Environment Variables
 
-### Backend (`backend/.env` or `application-local.properties`)
+### Backend (`backend/.env`)
 ```
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/briefy
 SPRING_DATASOURCE_USERNAME=briefy
@@ -140,12 +143,7 @@ SPRING_DATASOURCE_PASSWORD=briefy
 # JWT: Base64-encoded 256-bit 이상 랜덤 키 (개발용 기본값이 있으나 프로덕션에서 교체 필수)
 JWT_SECRET=<base64-encoded-256bit-key>
 
-# Google OAuth2 (Google Cloud Console에서 발급)
-# 승인된 리디렉션 URI: http://localhost:8080/login/oauth2/code/google
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-
-# 프론트엔드 URL (CORS + OAuth2 리디렉션 대상)
+# 프론트엔드 URL (CORS 대상)
 FRONTEND_URL=http://localhost:5173
 ```
 
@@ -172,4 +170,4 @@ VITE_API_BASE_URL=http://localhost:8080
 
 - **최신 버전 우선**: Spring Boot 4.0은 이전 버전과 API가 달라진 곳이 많다. 코드 작성 전 공식 문서 확인 또는 `use context7`로 최신 API 기준으로 생성
 - `ddl-auto: validate` — Flyway가 스키마 관리, Hibernate는 검증만 수행
-- V1, V2, V5 마이그레이션만 존재. DB 초기화 필요 시 `docker compose down -v`
+- 마이그레이션: V1, V2, V5, V7, V8, V9. DB 초기화 필요 시 `docker compose down -v`

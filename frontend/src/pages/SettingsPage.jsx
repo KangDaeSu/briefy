@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import './SettingsPage.css'
 
-const PROVIDER_LABEL = { LOCAL: '이메일', GOOGLE: 'Google' }
-
 export default function SettingsPage() {
   const { user, updateUser, deleteAccount } = useAuth()
   const navigate = useNavigate()
@@ -59,7 +57,6 @@ export default function SettingsPage() {
           <div className="settings-field">
             <span className="settings-field__label">이메일</span>
             <span className="settings-field__value">{user?.email}</span>
-            <span className="settings-badge">{PROVIDER_LABEL[user?.provider] ?? user?.provider}</span>
           </div>
 
           <form onSubmit={handleNameSave} className="settings-name-form">

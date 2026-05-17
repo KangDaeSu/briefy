@@ -2,10 +2,13 @@ spring:
   application:
     name: briefy
 
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/briefy}
-    username: ${SPRING_DATASOURCE_USERNAME:briefy}
-    password: ${SPRING_DATASOURCE_PASSWORD:briefy}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -26,18 +29,8 @@ spring:
     baseline-on-migrate: false
     repair-on-migrate: false
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID:dummy-local-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-local-client-secret}
-            scope: email, profile
-
 jwt:
-  # Base64-encoded 256-bit key (개발용 기본값 — 프로덕션에서 반드시 교체)
-  secret: ${JWT_SECRET:YnJpZWZ5LWp3dC1zZWNyZXQta2V5LWZvci1kZXYtb2s=}
+  secret: ${JWT_SECRET}
   expiration-ms: 604800000  # 7일
 
 app:

@@ -57,9 +57,9 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg18
         env:
-          POSTGRES_DB: briefy
-          POSTGRES_USER: briefy
-          POSTGRES_PASSWORD: briefy
+          POSTGRES_DB: ${{ secrets.CI_DB_NAME }}
+          POSTGRES_USER: ${{ secrets.CI_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -87,9 +87,9 @@ jobs:
         working-directory: backend
         run: ./mvnw spring-boot:run -Dspring-boot.run.profiles=test &
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/briefy
-          SPRING_DATASOURCE_USERNAME: briefy
-          SPRING_DATASOURCE_PASSWORD: briefy
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${{ secrets.CI_DB_NAME }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.CI_DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: Install frontend deps
@@ -150,11 +150,11 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      # Note: Ensure the following secrets are set in GitHub:
+      # Required GitHub Secrets:
       # - RAILWAY_TOKEN
-      # - JWT_SECRET (for E2E tests)
+      # - JWT_SECRET
+      # - CI_DB_NAME, CI_DB_USER, CI_DB_PASSWORD
       #
-      # Ensure the following variables are set in Railway for the Backend service:
+      # Required Railway environment variables (Backend service):
       # - SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
-      # - JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-      # - FRONTEND_URL
+      # - JWT_SECRET, FRONTEND_URL
