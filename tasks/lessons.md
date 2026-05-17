@@ -155,6 +155,84 @@ static class TestConfig {
 
 ## 인프라 / 배포
 
+### [2026-05-17] Railway 배포 — Railpack 빌드 오류
+**증상**: Railway가 `backend/` 폴더 안의 `railway.toml`을 못 찾고 Railpack으로 빌드 시도
+**원인**: Railway는 레포 루트를 기준으로 `railway.toml`을 찾는다. `backend/railway.toml`은 인식 안 됨
+**해결**:
+- `railway.toml`을 레포 **루트**로 이동
+- `dockerfilePath = "backend/Dockerfile"` 로 경로 지정
+- `Dockerfile` COPY 경로도 `backend/` 접두사로 수정 (빌드 컨텍스트가 루트이므로)
+```toml
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
+```
+```dockerfile
+COPY backend/.mvn/ .mvn/
+COPY backend/mvnw backend/pom.xml ./
+COPY backend/src/ src/
+```
+**교훈**: Railway `railway.toml`은 반드시 레포 루트에 위치해야 함
+
+---
+
+### [2026-05-17] Railway 배포 — `server.port` 하드코딩으로 헬스체크 실패
+**증상**: 빌드 성공 후 "Attempt #N failed with service unavailable" 반복
+**원인**: Railway는 컨테이너에 `PORT` 환경변수를 주입하는데, `application.yml`에 `server.port: 8080` 고정값이면 Railway가 기대하는 포트와 불일치
+**해결**: `application.yml`에서 `server.port: ${PORT:8080}` 으로 변경
+**교훈**: Railway/Heroku 등 PaaS 배포 시 포트는 반드시 환경변수로 받아야 함
+
+---
+
+### [2026-05-17] Railway 배포 — JwtProvider 생성자 예외 (JWT_SECRET 미설정)
+**증상**: `Error creating bean 'jwtProvider': Constructor threw exception`
+**원인**: Railway Variables에 `JWT_SECRET`이 없어 `props.secret()`이 null → `Decoders.decode(null)` NPE
+**해결**: Railway Variables 탭에 `JWT_SECRET` 추가
+**교훈**: `application.yml`에 fallback 없는 `${VAR}` 항목은 배포 전 Variables 탭에서 전수 확인
+
+---
+
+### [2026-05-17] Railway 배포 — `Illegal base64 character: '_'`
+**증상**: `io.jsonwebtoken.io.DecodingException: Illegal base64 character: '_'`
+**원인**: Railway Variables에 입력한 JWT_SECRET이 URL-safe Base64(`_`, `-` 포함)인데 코드는 표준 `Decoders.BASE64` 사용. 표준 Base64는 `_`를 허용하지 않음
+**해결**: `JwtProvider`에서 `Decoders.BASE64` → `Decoders.BASE64URL`로 변경
+**교훈**: Railway UI에서 Base64 값을 입력할 때 `+`, `/`가 포함되면 복사 중 변형될 수 있음. URL-safe Base64 사용 권장
+
+---
+
+### [2026-05-17] Railway 배포 — `WeakKeyException: 56 bits`
+**증상**: `io.jsonwebtoken.security.WeakKeyException: The specified key byte array is 56 bits`
+**원인**: Railway Variables의 JWT_SECRET 값이 너무 짧음 (7 bytes). JJWT는 HMAC-SHA256에 최소 256 bits(32 bytes) 요구
+**해결**: Base64 디코딩 대신 SHA-256 해시로 키를 파생하도록 변경 → 입력 길이/포맷 무관하게 항상 256-bit 키 생성
+```java
+private static byte[] sha256(String input) {
+    return MessageDigest.getInstance("SHA-256")
+        .digest(input.getBytes(StandardCharsets.UTF_8));
+}
+// 생성자에서:
+this.secretKey = Keys.hmacShaKeyFor(sha256(props.secret().strip()));
+```
+**교훈**: JWT 시크릿은 Base64 디코딩에 의존하지 말고 SHA-256 파생으로 처리하면 환경변수 값 형식 문제에서 자유로워짐
+
+---
+
+### [2026-05-17] Railway 배포 — `SPRING_DATASOURCE_URL` 형식 오류
+**증상**: DB 연결 실패
+**원인**: Railway Postgres의 `DATABASE_URL`은 `postgresql://...` 형식. Spring Boot JDBC는 `jdbc:postgresql://...` 형식 요구
+**해결**: Railway Variables에서 URL을 직접 조합
+```
+SPRING_DATASOURCE_URL = jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
+```
+**교훈**: Railway `${{Postgres.DATABASE_URL}}`을 그대로 쓰면 안 됨. `jdbc:` 접두사를 붙여서 직접 조합할 것
+
+---
+
+### [2026-05-17] Vercel 배포 — API URL이 Vercel 도메인에 붙어버리는 문제
+**증상**: `https://briefy.vercel.app/briefy-production.up.railway.app/api/v1/...` 로 요청됨 → 405 오류
+**원인**: `VITE_API_BASE_URL`에 `https://`를 빠뜨리고 `briefy-production.up.railway.app` 만 입력. 브라우저가 이를 상대 경로로 해석해 Vercel 도메인 뒤에 붙임
+**해결**: Vercel Environment Variables에서 `VITE_API_BASE_URL = https://briefy-production.up.railway.app` 으로 수정 후 재배포
+**교훈**: `VITE_API_BASE_URL`은 반드시 `https://` 포함한 전체 URL. 수정 후 Vercel Redeploy 필수
+
 ---
 
 ## 기타
