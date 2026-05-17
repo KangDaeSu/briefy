@@ -3,11 +3,13 @@ package com.briefy.global.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public class JwtProvider {
     private final long expirationMs;
 
     public JwtProvider(JwtProperties props) {
-        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(props.secret().strip()));
+        this.secretKey = Keys.hmacShaKeyFor(sha256(props.secret().strip()));
         this.expirationMs = props.expirationMs();
     }
 
@@ -51,5 +53,13 @@ public class JwtProvider {
 
     public boolean isValid(String token) {
         return tryParse(token).isPresent();
+    }
+
+    private static byte[] sha256(String input) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(input.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
