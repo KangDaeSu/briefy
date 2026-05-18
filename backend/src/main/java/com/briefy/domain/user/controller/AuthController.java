@@ -1,5 +1,6 @@
 package com.briefy.domain.user.controller;
 
+import com.briefy.domain.user.dto.AuthResponse;
 import com.briefy.domain.user.dto.LoginRequest;
 import com.briefy.domain.user.dto.RegisterRequest;
 import com.briefy.domain.user.dto.UserResponse;
@@ -35,19 +36,19 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request,
+    public ApiResponse<AuthResponse> register(@Valid @RequestBody RegisterRequest request,
                                               HttpServletResponse response) {
         AuthResult result = authService.register(request.email(), request.name(), request.password());
         setJwtCookie(response, result.token());
-        return ApiResponse.ok(UserResponse.from(result.user()));
+        return ApiResponse.ok(new AuthResponse(UserResponse.from(result.user()), result.token()));
     }
 
     @PostMapping("/login")
-    public ApiResponse<UserResponse> login(@Valid @RequestBody LoginRequest request,
+    public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                            HttpServletResponse response) {
         AuthResult result = authService.login(request.email(), request.password());
         setJwtCookie(response, result.token());
-        return ApiResponse.ok(UserResponse.from(result.user()));
+        return ApiResponse.ok(new AuthResponse(UserResponse.from(result.user()), result.token()));
     }
 
     @PostMapping("/logout")

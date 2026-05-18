@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { authApi } from '../api/auth'
 import { usersApi } from '../api/users'
 import { saveAccount } from '../utils/savedAccounts'
+import { setToken } from '../api/client'
 
 const AuthContext = createContext(null)
 
@@ -25,19 +26,22 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const res = await authApi.login({ email, password })
-    setUser(res.data)
-    saveAccount({ email: res.data.email, name: res.data.name })
-    return res.data
+    setToken(res.data.token)
+    setUser(res.data.user)
+    saveAccount({ email: res.data.user.email, name: res.data.user.name })
+    return res.data.user
   }, [])
 
   const register = useCallback(async (email, name, password) => {
     const res = await authApi.register({ email, name, password })
-    setUser(res.data)
-    saveAccount({ email: res.data.email, name: res.data.name })
-    return res.data
+    setToken(res.data.token)
+    setUser(res.data.user)
+    saveAccount({ email: res.data.user.email, name: res.data.user.name })
+    return res.data.user
   }, [])
 
   const logout = useCallback(async () => {
+    setToken(null)
     await authApi.logout()
     setUser(null)
   }, [])
@@ -50,6 +54,7 @@ export function AuthProvider({ children }) {
 
   const deleteAccount = useCallback(async () => {
     await usersApi.deleteMe()
+    setToken(null)
     await authApi.logout()
     setUser(null)
   }, [])

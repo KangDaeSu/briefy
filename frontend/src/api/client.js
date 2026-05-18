@@ -1,12 +1,23 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
+function getToken() {
+  return localStorage.getItem('jwt')
+}
+
+export function setToken(token) {
+  if (token) localStorage.setItem('jwt', token)
+  else localStorage.removeItem('jwt')
+}
+
 async function request(path, options = {}) {
   const { headers: extraHeaders, ...rest } = options
   const hasBody = rest.body !== undefined
+  const token = getToken()
   const res = await fetch(`${BASE_URL}${path}`, {
-    credentials: 'include', // httpOnly 쿠키 자동 전송
+    credentials: 'include',
     headers: {
       ...(hasBody && { 'Content-Type': 'application/json' }),
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...extraHeaders,
     },
     ...rest,
