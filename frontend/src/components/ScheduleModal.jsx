@@ -257,7 +257,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           <div className="datetime-fields">
             <div className="datetime-field">
               <span className="field-label">시작 <span className="required">*</span></span>
-              <div className="datetime-inputs">
+              <div className="datetime-box">
                 <input type="date" value={form.startDate} onChange={set('startDate')} required />
                 <div className="time-input-group">
                   <input
@@ -279,13 +279,13 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
                     onBlur={handleMinuteBlur('start')}
                     placeholder="분"
                   />
-                  <AmPmSelect value={form.startAmPm} onChange={v => setForm(prev => ({ ...prev, startAmPm: v }))} />
                 </div>
+                <AmPmSelect value={form.startAmPm} onChange={v => setForm(prev => ({ ...prev, startAmPm: v }))} />
               </div>
             </div>
             <div className="datetime-field">
               <span className="field-label">종료 <span className="required">*</span></span>
-              <div className="datetime-inputs">
+              <div className="datetime-box">
                 <input type="date" value={form.endDate} onChange={set('endDate')} required />
                 <div className="time-input-group">
                   <input
@@ -307,8 +307,8 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
                     onBlur={handleMinuteBlur('end')}
                     placeholder="분"
                   />
-                  <AmPmSelect value={form.endAmPm} onChange={v => setForm(prev => ({ ...prev, endAmPm: v }))} />
                 </div>
+                <AmPmSelect value={form.endAmPm} onChange={v => setForm(prev => ({ ...prev, endAmPm: v }))} />
               </div>
             </div>
           </div>

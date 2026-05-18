@@ -95,29 +95,51 @@
   color: #374151;
 }
 
-.datetime-inputs {
+/* 날짜·시간·오전오후를 묶는 단일 박스 */
+.datetime-box {
   display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: stretch;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s;
 }
 
-.datetime-inputs input[type="date"] {
+.datetime-box:focus-within {
+  border-color: #3b82f6;
+}
+
+.datetime-box > input[type="date"] {
   flex: 1;
-  min-width: 120px;
+  min-width: 0;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }
 
 .time-input-group {
   display: flex;
-  gap: 4px;
   align-items: center;
+  gap: 2px;
+  padding: 0 8px;
 }
 
 .time-hour-input,
 .time-minute-input {
-  width: 44px;
+  width: 32px;
   text-align: center;
-  padding: 8px 4px;
+  border: none;
+  border-radius: 0;
+  padding: 8px 2px;
+  font-size: 14px;
+  background: transparent;
+  outline: none;
   -moz-appearance: textfield;
 }
 
@@ -145,21 +167,21 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 8px 8px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 8px 10px;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
   color: #374151;
   font-family: inherit;
-  transition: border-color 0.15s;
-  line-height: 1.4;
+  height: 100%;
 }
 
 .ampm-btn:hover {
-  border-color: #9ca3af;
+  background: #f9fafb;
 }
 
 .ampm-arrow {
