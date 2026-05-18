@@ -91,16 +91,23 @@
 .time-select-wrap select {
   padding: 8px 4px;
   cursor: pointer;
-}
-
-.time-select-wrap select:first-child,
-.time-select-wrap select:nth-child(3) {
-  width: 52px;
-  text-align: center;
-}
-
-.time-select-wrap select:last-child {
   flex: 1;
+}
+
+.time-hour-input,
+.time-minute-input {
+  width: 44px;
+  text-align: center;
+  padding: 8px 4px;
+  -moz-appearance: textfield;
+}
+
+.time-hour-input::-webkit-outer-spin-button,
+.time-hour-input::-webkit-inner-spin-button,
+.time-minute-input::-webkit-outer-spin-button,
+.time-minute-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .time-colon {

@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react'
 import './ScheduleModal.css'
 
-const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1))
-const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
+const RRULE_OPTIONS = [
+  { value: '', label: '반복 없음' },
+  { value: 'FREQ=DAILY', label: '매일' },
+  { value: 'FREQ=WEEKLY', label: '매주 같은 요일' },
+  { value: 'FREQ=WEEKLY;INTERVAL=2', label: '격주 같은 요일' },
+  { value: 'FREQ=MONTHLY', label: '매월 같은 날' },
+  { value: 'FREQ=YEARLY', label: '매년 같은 날' },
+  { value: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', label: '주중 매일 (월–금)' },
+  { value: '__custom__', label: '직접 입력…' },
+]
+
+const PRESET_VALUES = RRULE_OPTIONS.map(o => o.value).filter(v => v !== '__custom__')
 
 function to12h(h24) {
-  if (h24 === 0) return { hour: '12', ampm: '오전' }
+  if (h24 === 0) return { hour: '0', ampm: '오전' }
   if (h24 < 12) return { hour: String(h24), ampm: '오전' }
   if (h24 === 12) return { hour: '12', ampm: '오후' }
   return { hour: String(h24 - 12), ampm: '오후' }
@@ -13,6 +23,9 @@ function to12h(h24) {
 
 function to24h(hour12, ampm) {
   const h = parseInt(hour12, 10)
+  if (isNaN(h)) return 0
+  if (h >= 13 && h <= 23) return h         // 24h 직접 입력
+  if (h === 0 || h === 24) return 0         // 자정
   if (ampm === '오전') return h === 12 ? 0 : h
   return h === 12 ? 12 : h + 12
 }
@@ -23,15 +36,16 @@ function parseToFields(iso) {
   const pad = n => String(n).padStart(2, '0')
   const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
   const { hour, ampm } = to12h(d.getHours())
-  const rawMin = d.getMinutes()
-  const minute = pad(Math.round(rawMin / 5) * 5 % 60)
+  const minute = pad(d.getMinutes())
   return { date, hour, minute, ampm }
 }
 
 function fieldsToISO(date, hour, minute, ampm) {
   if (!date) return ''
   const h24 = to24h(hour, ampm)
-  return new Date(`${date}T${String(h24).padStart(2, '0')}:${minute}`).toISOString()
+  const m = Math.max(0, Math.min(59, parseInt(minute, 10) || 0))
+  const pad = n => String(n).padStart(2, '0')
+  return new Date(`${date}T${pad(h24)}:${pad(m)}`).toISOString()
 }
 
 const INITIAL = {
@@ -95,6 +109,37 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
+  // 시간 블러 시 13-24 자동 변환 + AM/PM 업데이트
+  function handleHourBlur(prefix) {
+    return () => {
+      const h = parseInt(form[`${prefix}Hour`], 10)
+      if (isNaN(h)) return
+      if (h >= 13 && h <= 23) {
+        setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }))
+      } else if (h === 0 || h === 24) {
+        setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }))
+      }
+    }
+  }
+
+  // 분 블러 시 두 자리 패딩
+  function handleMinuteBlur(prefix) {
+    return () => {
+      const m = parseInt(form[`${prefix}Minute`], 10)
+      const clamped = isNaN(m) ? 0 : Math.max(0, Math.min(59, m))
+      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }))
+    }
+  }
+
+  // 반복 셀렉트: 프리셋 선택 시 rrule 직접 세팅, 직접입력 선택 시 유지
+  function handleRrulePreset(e) {
+    const val = e.target.value
+    if (val !== '__custom__') setForm(prev => ({ ...prev, rrule: val }))
+  }
+
+  const isCustomRrule = form.rrule !== '' && !PRESET_VALUES.includes(form.rrule)
+  const rruleSelectValue = isCustomRrule ? '__custom__' : form.rrule
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -151,13 +196,25 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
               시작
               <input type="date" value={form.startDate} onChange={set('startDate')} required />
               <div className="time-select-wrap">
-                <select value={form.startHour} onChange={set('startHour')}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                </select>
+                <input
+                  className="time-hour-input"
+                  type="number"
+                  value={form.startHour}
+                  onChange={set('startHour')}
+                  onBlur={handleHourBlur('start')}
+                  placeholder="시"
+                />
                 <span className="time-colon">:</span>
-                <select value={form.startMinute} onChange={set('startMinute')}>
-                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
+                <input
+                  className="time-minute-input"
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={form.startMinute}
+                  onChange={set('startMinute')}
+                  onBlur={handleMinuteBlur('start')}
+                  placeholder="분"
+                />
                 <select value={form.startAmPm} onChange={set('startAmPm')}>
                   <option value="오전">오전</option>
                   <option value="오후">오후</option>
@@ -168,13 +225,25 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
               종료
               <input type="date" value={form.endDate} onChange={set('endDate')} required />
               <div className="time-select-wrap">
-                <select value={form.endHour} onChange={set('endHour')}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                </select>
+                <input
+                  className="time-hour-input"
+                  type="number"
+                  value={form.endHour}
+                  onChange={set('endHour')}
+                  onBlur={handleHourBlur('end')}
+                  placeholder="시"
+                />
                 <span className="time-colon">:</span>
-                <select value={form.endMinute} onChange={set('endMinute')}>
-                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
+                <input
+                  className="time-minute-input"
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={form.endMinute}
+                  onChange={set('endMinute')}
+                  onBlur={handleMinuteBlur('end')}
+                  placeholder="분"
+                />
                 <select value={form.endAmPm} onChange={set('endAmPm')}>
                   <option value="오전">오전</option>
                   <option value="오후">오후</option>
@@ -184,12 +253,19 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           </div>
 
           <label>
-            반복 규칙 <span className="hint">(RRULE, 선택)</span>
-            <input
-              value={form.rrule}
-              onChange={set('rrule')}
-              placeholder="예: FREQ=WEEKLY;BYDAY=MO,WE,FR"
-            />
+            반복
+            <select value={rruleSelectValue} onChange={handleRrulePreset}>
+              {RRULE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            {isCustomRrule && (
+              <input
+                value={form.rrule}
+                onChange={set('rrule')}
+                placeholder="예: FREQ=WEEKLY;BYDAY=MO,WE,FR"
+              />
+            )}
           </label>
 
           {error && <p className="modal-error">{error}</p>}
