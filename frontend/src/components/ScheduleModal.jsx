@@ -1,24 +1,50 @@
 import { useState, useEffect } from 'react'
 import './ScheduleModal.css'
 
-function toLocalDatetimeValue(dateOrStr) {
-  if (!dateOrStr) return ''
-  const d = new Date(dateOrStr)
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1))
+const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
+
+function to12h(h24) {
+  if (h24 === 0) return { hour: '12', ampm: '오전' }
+  if (h24 < 12) return { hour: String(h24), ampm: '오전' }
+  if (h24 === 12) return { hour: '12', ampm: '오후' }
+  return { hour: String(h24 - 12), ampm: '오후' }
 }
 
-function getAmPm(datetimeStr) {
-  if (!datetimeStr) return null
-  const hour = parseInt(datetimeStr.split('T')[1]?.split(':')[0] ?? '0', 10)
-  return hour < 12 ? '오전' : '오후'
+function to24h(hour12, ampm) {
+  const h = parseInt(hour12, 10)
+  if (ampm === '오전') return h === 12 ? 0 : h
+  return h === 12 ? 12 : h + 12
+}
+
+function parseToFields(iso) {
+  if (!iso) return { date: '', hour: '12', minute: '00', ampm: '오전' }
+  const d = new Date(iso)
+  const pad = n => String(n).padStart(2, '0')
+  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const { hour, ampm } = to12h(d.getHours())
+  const rawMin = d.getMinutes()
+  const minute = pad(Math.round(rawMin / 5) * 5 % 60)
+  return { date, hour, minute, ampm }
+}
+
+function fieldsToISO(date, hour, minute, ampm) {
+  if (!date) return ''
+  const h24 = to24h(hour, ampm)
+  return new Date(`${date}T${String(h24).padStart(2, '0')}:${minute}`).toISOString()
 }
 
 const INITIAL = {
   title: '',
   description: '',
-  startTime: '',
-  endTime: '',
+  startDate: '',
+  startHour: '9',
+  startMinute: '00',
+  startAmPm: '오전',
+  endDate: '',
+  endHour: '10',
+  endMinute: '00',
+  endAmPm: '오전',
   rrule: '',
 }
 
@@ -31,21 +57,35 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   useEffect(() => {
     if (!open) { setForm(INITIAL); setError(null); return }
     if (schedule) {
+      const s = parseToFields(schedule.startTime)
+      const e = parseToFields(schedule.endTime)
       setForm({
         title: schedule.title,
         description: schedule.description ?? '',
-        startTime: toLocalDatetimeValue(schedule.startTime),
-        endTime: toLocalDatetimeValue(schedule.endTime),
+        startDate: s.date,
+        startHour: s.hour,
+        startMinute: s.minute,
+        startAmPm: s.ampm,
+        endDate: e.date,
+        endHour: e.hour,
+        endMinute: e.minute,
+        endAmPm: e.ampm,
         rrule: schedule.rrule ?? '',
       })
     } else if (defaultDate) {
-      const pad = (n) => String(n).padStart(2, '0')
+      const pad = n => String(n).padStart(2, '0')
       const d = defaultDate
-      const base = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
       setForm(prev => ({
         ...prev,
-        startTime: `${base}T09:00`,
-        endTime: `${base}T10:00`,
+        startDate: date,
+        startHour: '9',
+        startMinute: '00',
+        startAmPm: '오전',
+        endDate: date,
+        endHour: '10',
+        endMinute: '00',
+        endAmPm: '오전',
       }))
     }
   }, [open, schedule, defaultDate])
@@ -53,18 +93,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   if (!open) return null
 
-  const set = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
-
-  function toggleAmPm(key) {
-    setForm(prev => {
-      const val = prev[key]
-      if (!val) return prev
-      const [date, time] = val.split('T')
-      const [h, m] = time.split(':').map(Number)
-      const newHour = h < 12 ? Math.min(h + 12, 23) : h - 12
-      return { ...prev, [key]: `${date}T${String(newHour).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
-    })
-  }
+  const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -74,8 +103,8 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
       await onSave({
         title: form.title,
         description: form.description || null,
-        startTime: new Date(form.startTime).toISOString(),
-        endTime: new Date(form.endTime).toISOString(),
+        startTime: fieldsToISO(form.startDate, form.startHour, form.startMinute, form.startAmPm),
+        endTime: fieldsToISO(form.endDate, form.endHour, form.endMinute, form.endAmPm),
         rrule: form.rrule || null,
       })
       onClose()
@@ -100,7 +129,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   }
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div className="modal-header">
           <h2>{schedule ? '일정 수정' : '새 일정'}</h2>
@@ -116,38 +145,44 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
             설명
             <textarea value={form.description} onChange={set('description')} rows={2} placeholder="선택 사항" />
           </label>
+
           <div className="modal-row">
             <label>
               시작
-              <div className="time-input-wrap">
-                <input type="datetime-local" value={form.startTime} onChange={set('startTime')} required />
-                {form.startTime && (
-                  <button
-                    type="button"
-                    className={`ampm-badge${getAmPm(form.startTime) === '오후' ? ' ampm-badge--pm' : ''}`}
-                    onClick={() => toggleAmPm('startTime')}
-                  >
-                    {getAmPm(form.startTime)}
-                  </button>
-                )}
+              <input type="date" value={form.startDate} onChange={set('startDate')} required />
+              <div className="time-select-wrap">
+                <select value={form.startHour} onChange={set('startHour')}>
+                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+                <span className="time-colon">:</span>
+                <select value={form.startMinute} onChange={set('startMinute')}>
+                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select value={form.startAmPm} onChange={set('startAmPm')}>
+                  <option value="오전">오전</option>
+                  <option value="오후">오후</option>
+                </select>
               </div>
             </label>
             <label>
               종료
-              <div className="time-input-wrap">
-                <input type="datetime-local" value={form.endTime} onChange={set('endTime')} required />
-                {form.endTime && (
-                  <button
-                    type="button"
-                    className={`ampm-badge${getAmPm(form.endTime) === '오후' ? ' ampm-badge--pm' : ''}`}
-                    onClick={() => toggleAmPm('endTime')}
-                  >
-                    {getAmPm(form.endTime)}
-                  </button>
-                )}
+              <input type="date" value={form.endDate} onChange={set('endDate')} required />
+              <div className="time-select-wrap">
+                <select value={form.endHour} onChange={set('endHour')}>
+                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+                <span className="time-colon">:</span>
+                <select value={form.endMinute} onChange={set('endMinute')}>
+                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select value={form.endAmPm} onChange={set('endAmPm')}>
+                  <option value="오전">오전</option>
+                  <option value="오후">오후</option>
+                </select>
               </div>
             </label>
           </div>
+
           <label>
             반복 규칙 <span className="hint">(RRULE, 선택)</span>
             <input

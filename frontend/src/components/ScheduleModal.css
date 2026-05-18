@@ -58,7 +58,8 @@
 }
 
 .modal-form input,
-.modal-form textarea {
+.modal-form textarea,
+.modal-form select {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 8px 10px;
@@ -66,10 +67,12 @@
   outline: none;
   transition: border-color 0.15s;
   font-family: inherit;
+  background: #fff;
 }
 
 .modal-form input:focus,
-.modal-form textarea:focus {
+.modal-form textarea:focus,
+.modal-form select:focus {
   border-color: #3b82f6;
 }
 
@@ -79,41 +82,32 @@
   gap: 12px;
 }
 
-.time-input-wrap {
+.time-select-wrap {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
 }
 
-.time-input-wrap input {
-  flex: 1;
-  min-width: 0;
-}
-
-.ampm-badge {
-  flex-shrink: 0;
-  padding: 0 8px;
-  height: 35px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #f9fafb;
-  font-size: 12px;
-  font-weight: 600;
+.time-select-wrap select {
+  padding: 8px 4px;
   cursor: pointer;
+}
+
+.time-select-wrap select:first-child,
+.time-select-wrap select:nth-child(3) {
+  width: 52px;
+  text-align: center;
+}
+
+.time-select-wrap select:last-child {
+  flex: 1;
+}
+
+.time-colon {
+  font-size: 14px;
+  font-weight: 600;
   color: #374151;
-  transition: background 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-
-.ampm-badge:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.ampm-badge--pm {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  user-select: none;
 }
 
 .required { color: #ef4444; }
