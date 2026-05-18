@@ -109,11 +109,30 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
-  // 시간 블러 시 13-24 자동 변환 + AM/PM 업데이트
+  // 숫자만 허용하며 즉시 클램핑 (type="text"이므로 setState로 강제 동기화)
+  function handleHourChange(prefix) {
+    return e => {
+      const raw = e.target.value.replace(/\D/g, '')
+      if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '' })); return }
+      const n = parseInt(raw, 10)
+      setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(Math.min(24, n)) }))
+    }
+  }
+
+  function handleMinuteChange(prefix) {
+    return e => {
+      const raw = e.target.value.replace(/\D/g, '')
+      if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Minute`]: '' })); return }
+      const n = parseInt(raw, 10)
+      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(Math.min(59, n)) }))
+    }
+  }
+
+  // 블러 시 13-24 자동 변환 + AM/PM 업데이트
   function handleHourBlur(prefix) {
     return () => {
       const h = parseInt(form[`${prefix}Hour`], 10)
-      if (isNaN(h)) return
+      if (isNaN(h)) { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0' })); return }
       if (h >= 13 && h <= 23) {
         setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }))
       } else if (h === 0 || h === 24) {
@@ -122,11 +141,11 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     }
   }
 
-  // 분 블러 시 두 자리 패딩
+  // 블러 시 두 자리 패딩
   function handleMinuteBlur(prefix) {
     return () => {
       const m = parseInt(form[`${prefix}Minute`], 10)
-      const clamped = isNaN(m) ? 0 : Math.max(0, Math.min(59, m))
+      const clamped = isNaN(m) ? 0 : m
       setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }))
     }
   }
@@ -198,20 +217,20 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
               <div className="time-select-wrap">
                 <input
                   className="time-hour-input"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={form.startHour}
-                  onChange={set('startHour')}
+                  onChange={handleHourChange('start')}
                   onBlur={handleHourBlur('start')}
                   placeholder="시"
                 />
                 <span className="time-colon">:</span>
                 <input
                   className="time-minute-input"
-                  type="number"
-                  min="0"
-                  max="59"
+                  type="text"
+                  inputMode="numeric"
                   value={form.startMinute}
-                  onChange={set('startMinute')}
+                  onChange={handleMinuteChange('start')}
                   onBlur={handleMinuteBlur('start')}
                   placeholder="분"
                 />
@@ -227,20 +246,20 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
               <div className="time-select-wrap">
                 <input
                   className="time-hour-input"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={form.endHour}
-                  onChange={set('endHour')}
+                  onChange={handleHourChange('end')}
                   onBlur={handleHourBlur('end')}
                   placeholder="시"
                 />
                 <span className="time-colon">:</span>
                 <input
                   className="time-minute-input"
-                  type="number"
-                  min="0"
-                  max="59"
+                  type="text"
+                  inputMode="numeric"
                   value={form.endMinute}
-                  onChange={set('endMinute')}
+                  onChange={handleMinuteChange('end')}
                   onBlur={handleMinuteBlur('end')}
                   placeholder="분"
                 />
