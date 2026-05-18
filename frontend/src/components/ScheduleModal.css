@@ -95,51 +95,59 @@
   color: #374151;
 }
 
-/* 날짜·시간·오전오후를 묶는 단일 박스 */
+/* 날짜·시간·오전오후·달력 아이콘을 하나의 박스로 */
 .datetime-box {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background: #fff;
-  overflow: hidden;
   transition: border-color 0.15s;
+  padding: 0 4px 0 0;
 }
 
 .datetime-box:focus-within {
   border-color: #3b82f6;
 }
 
-.datetime-box > input[type="date"] {
+/* 날짜 입력 — 네이티브 달력 아이콘 숨기고 텍스트만 표시 */
+.datetime-box .date-input {
   flex: 1;
   min-width: 0;
   border: none;
-  border-right: 1px solid #e5e7eb;
   border-radius: 0;
-  padding: 8px 10px;
+  background: transparent;
+  padding: 8px 6px 8px 10px;
   font-size: 14px;
   outline: none;
-  background: transparent;
   font-family: inherit;
 }
 
-.time-input-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 8px;
+.datetime-box .date-input::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
+/* 날짜와 시간 사이 얇은 구분 */
+.dt-divider {
+  width: 1px;
+  height: 18px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* 시간 입력 */
 .time-hour-input,
 .time-minute-input {
-  width: 32px;
+  width: 28px;
   text-align: center;
   border: none;
   border-radius: 0;
+  background: transparent;
   padding: 8px 2px;
   font-size: 14px;
-  background: transparent;
   outline: none;
+  font-family: inherit;
   -moz-appearance: textfield;
 }
 
@@ -156,73 +164,43 @@
   font-weight: 600;
   color: #374151;
   user-select: none;
+  padding: 0 1px;
 }
 
-/* 오전/오후 커스텀 드롭다운 */
-.ampm-wrap {
-  position: relative;
+/* 오전/오후 네이티브 셀렉트 */
+.datetime-box .ampm-select {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 4px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: #374151;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+  min-width: 36px;
 }
 
-.ampm-btn {
+/* 달력 아이콘 버튼 */
+.calendar-btn {
   display: flex;
   align-items: center;
-  gap: 3px;
-  background: transparent;
-  border: none;
-  border-left: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: 8px 10px;
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-  color: #374151;
-  font-family: inherit;
-  height: 100%;
-}
-
-.ampm-btn:hover {
-  background: #f9fafb;
-}
-
-.ampm-arrow {
-  font-size: 10px;
-  color: #9ca3af;
-}
-
-.ampm-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 200;
-  overflow: hidden;
-  min-width: 62px;
-}
-
-.ampm-option {
-  display: block;
-  width: 100%;
-  padding: 8px 14px;
-  font-size: 13px;
+  justify-content: center;
   background: none;
   border: none;
+  padding: 6px 6px;
   cursor: pointer;
-  text-align: left;
-  color: #374151;
-  font-family: inherit;
+  color: #9ca3af;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
-.ampm-option:hover {
+.calendar-btn:hover {
+  color: #6b7280;
   background: #f3f4f6;
-}
-
-.ampm-option--active {
-  background: #eff6ff;
-  color: #3b82f6;
-  font-weight: 500;
 }
 
 .required { color: #ef4444; }
