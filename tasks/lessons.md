@@ -227,6 +227,55 @@ SPRING_DATASOURCE_URL = jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPOR
 
 ---
 
+### [2026-05-18] 크로스오리진 요청 401 — SameSite=Lax 쿠키 차단
+**증상**: Vercel(프론트) → Railway(백엔드) POST 요청 시 401 Unauthorized. 로그인 후 일정 생성/조회 모두 실패
+**원인**: 브라우저 SameSite=Lax 정책으로 크로스사이트 POST 요청에 httpOnly 쿠키가 전송되지 않음. Railway Variables에 `COOKIE_SAME_SITE=None, COOKIE_SECURE=true`를 추가해도 프론트·백엔드 도메인이 다르면(vercel.app ↔ railway.app) 쿠키 기반 인증은 근본적으로 불안정
+**해결**: 쿠키 의존을 버리고 JWT를 `Authorization: Bearer` 헤더로 전달하도록 전환
+```java
+// JwtAuthenticationFilter.extractToken() — 헤더 우선, 쿠키 폴백
+String authHeader = request.getHeader("Authorization");
+if (authHeader != null && authHeader.startsWith("Bearer ")) {
+    return authHeader.substring(7);
+}
+// ... 쿠키 폴백
+```
+```javascript
+// client.js — localStorage에서 토큰 읽어 헤더에 첨부
+const token = localStorage.getItem('jwt')
+headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
+```
+- 로그인/회원가입 응답 body에 토큰을 포함(`AuthResponse { user, token }`)하여 프론트가 localStorage에 저장
+**교훈**: 프론트·백엔드 도메인이 다른 배포 환경에서는 처음부터 Bearer 헤더 방식으로 설계할 것. 쿠키 인증은 Same-Site 환경에서만 안정적
+
+---
+
+### [2026-05-18] 재배포 후 CORS OPTIONS 403
+**증상**: 재배포 직후 모든 API 호출에 `OPTIONS ... 403` Preflight 실패
+**원인 1**: `setAllowedOrigins()` 는 와일드카드(`*`) 패턴 지원 안 함 + `allowCredentials=true`와 함께 쓰면 Spring이 거부
+**원인 2**: Spring Security `authorizeHttpRequests`에 `OPTIONS` 메서드 예외 규칙이 없어 preflight를 인증 필터가 차단
+**원인 3**: `Authorization` 헤더가 `allowedHeaders` 목록에 없어 CORS가 차단
+**해결**:
+```java
+// SecurityConfig — OPTIONS 전체 허용
+.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+// CorsConfigurationSource — 와일드카드 지원 메서드 + Authorization 헤더 명시
+config.setAllowedOriginPatterns(List.of(frontendUrl, "http://localhost:*"));
+config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+config.setAllowCredentials(true);
+```
+**교훈**: CORS + JWT 헤더 조합 시 체크리스트 — ① `setAllowedOriginPatterns` 사용 ② `OPTIONS /**` permitAll ③ `Authorization` allowedHeaders 포함
+
+---
+
+### [2026-05-18] 배포 후 화면 공백 — localStorage 데이터 오염
+**증상**: 재배포 후 초기 화면이 전혀 뜨지 않음. 콘솔에 `TypeError: Cannot read properties of undefined (reading '0')`
+**원인**: 이전 배포에서 `briefy_accounts` localStorage 항목에 `{ email: undefined, name: undefined }` 형태의 잘못된 데이터가 저장됨. 로그인 페이지에서 `account.name[0]` 접근 시 undefined 오류 → 화면 전체 크래시
+**해결**: 브라우저 개발자도구에서 `localStorage.removeItem('briefy_accounts')` 실행하여 오염 데이터 제거
+**교훈**: localStorage에 객체를 저장할 때 값이 유효한지 검증 후 저장할 것. `saveAccount` 함수에서 `email`이 빈 값이면 저장하지 않는 방어 코드 추가 권장
+
+---
+
 ### [2026-05-17] Vercel 배포 — API URL이 Vercel 도메인에 붙어버리는 문제
 **증상**: `https://briefy.vercel.app/briefy-production.up.railway.app/api/v1/...` 로 요청됨 → 405 오류
 **원인**: `VITE_API_BASE_URL`에 `https://`를 빠뜨리고 `briefy-production.up.railway.app` 만 입력. 브라우저가 이를 상대 경로로 해석해 Vercel 도메인 뒤에 붙임
