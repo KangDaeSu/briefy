@@ -76,22 +76,41 @@
   border-color: #3b82f6;
 }
 
-.modal-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* datetime 레이아웃 */
+.datetime-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.time-select-wrap {
+.datetime-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.datetime-inputs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.datetime-inputs input[type="date"] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.time-input-group {
   display: flex;
   gap: 4px;
   align-items: center;
-}
-
-.time-select-wrap select {
-  padding: 8px 4px;
-  cursor: pointer;
-  flex: 1;
 }
 
 .time-hour-input,
@@ -115,6 +134,73 @@
   font-weight: 600;
   color: #374151;
   user-select: none;
+}
+
+/* 오전/오후 커스텀 드롭다운 */
+.ampm-wrap {
+  position: relative;
+}
+
+.ampm-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #374151;
+  font-family: inherit;
+  transition: border-color 0.15s;
+  line-height: 1.4;
+}
+
+.ampm-btn:hover {
+  border-color: #9ca3af;
+}
+
+.ampm-arrow {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.ampm-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  overflow: hidden;
+  min-width: 62px;
+}
+
+.ampm-option {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: #374151;
+  font-family: inherit;
+}
+
+.ampm-option:hover {
+  background: #f3f4f6;
+}
+
+.ampm-option--active {
+  background: #eff6ff;
+  color: #3b82f6;
+  font-weight: 500;
 }
 
 .required { color: #ef4444; }

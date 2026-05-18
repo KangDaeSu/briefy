@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './ScheduleModal.css'
 
 const RRULE_OPTIONS = [
@@ -24,8 +24,8 @@ function to12h(h24) {
 function to24h(hour12, ampm) {
   const h = parseInt(hour12, 10)
   if (isNaN(h)) return 0
-  if (h >= 13 && h <= 23) return h         // 24h 직접 입력
-  if (h === 0 || h === 24) return 0         // 자정
+  if (h >= 13 && h <= 23) return h
+  if (h === 0 || h === 24) return 0
   if (ampm === '오전') return h === 12 ? 0 : h
   return h === 12 ? 12 : h + 12
 }
@@ -60,6 +60,42 @@ const INITIAL = {
   endMinute: '00',
   endAmPm: '오전',
   rrule: '',
+}
+
+function AmPmSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onOutside)
+    return () => document.removeEventListener('mousedown', onOutside)
+  }, [open])
+
+  return (
+    <div className="ampm-wrap" ref={ref}>
+      <button type="button" className="ampm-btn" onClick={() => setOpen(o => !o)}>
+        {value}<span className="ampm-arrow">▾</span>
+      </button>
+      {open && (
+        <div className="ampm-dropdown">
+          {['오전', '오후'].map(v => (
+            <button
+              key={v}
+              type="button"
+              className={`ampm-option${value === v ? ' ampm-option--active' : ''}`}
+              onClick={() => { onChange(v); setOpen(false) }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function ScheduleModal({ open, onClose, onSave, onDelete, defaultDate, schedule }) {
@@ -109,7 +145,6 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
-  // 숫자만 허용하며 즉시 클램핑 (type="text"이므로 setState로 강제 동기화)
   function handleHourChange(prefix) {
     return e => {
       const raw = e.target.value.replace(/\D/g, '')
@@ -128,20 +163,30 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     }
   }
 
-  // 블러 시 13-24 자동 변환 + AM/PM 업데이트
   function handleHourBlur(prefix) {
     return () => {
       const h = parseInt(form[`${prefix}Hour`], 10)
       if (isNaN(h)) { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0' })); return }
       if (h >= 13 && h <= 23) {
         setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }))
-      } else if (h === 0 || h === 24) {
+      } else if (h === 24) {
+        // 날짜를 하루 앞으로 이동하고 자정(0시)으로 설정
+        const dateKey = `${prefix}Date`
+        setForm(prev => {
+          const currentDate = prev[dateKey]
+          if (!currentDate) return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }
+          const d = new Date(currentDate + 'T00:00:00')
+          d.setDate(d.getDate() + 1)
+          const pad = n => String(n).padStart(2, '0')
+          const newDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+          return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전', [dateKey]: newDate }
+        })
+      } else if (h === 0) {
         setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }))
       }
     }
   }
 
-  // 블러 시 두 자리 패딩
   function handleMinuteBlur(prefix) {
     return () => {
       const m = parseInt(form[`${prefix}Minute`], 10)
@@ -150,7 +195,6 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     }
   }
 
-  // 반복 셀렉트: 프리셋 선택 시 rrule 직접 세팅, 직접입력 선택 시 유지
   function handleRrulePreset(e) {
     const val = e.target.value
     if (val !== '__custom__') setForm(prev => ({ ...prev, rrule: val }))
@@ -210,65 +254,63 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
             <textarea value={form.description} onChange={set('description')} rows={2} placeholder="선택 사항" />
           </label>
 
-          <div className="modal-row">
-            <label>
-              시작
-              <input type="date" value={form.startDate} onChange={set('startDate')} required />
-              <div className="time-select-wrap">
-                <input
-                  className="time-hour-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.startHour}
-                  onChange={handleHourChange('start')}
-                  onBlur={handleHourBlur('start')}
-                  placeholder="시"
-                />
-                <span className="time-colon">:</span>
-                <input
-                  className="time-minute-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.startMinute}
-                  onChange={handleMinuteChange('start')}
-                  onBlur={handleMinuteBlur('start')}
-                  placeholder="분"
-                />
-                <select value={form.startAmPm} onChange={set('startAmPm')}>
-                  <option value="오전">오전</option>
-                  <option value="오후">오후</option>
-                </select>
+          <div className="datetime-fields">
+            <div className="datetime-field">
+              <span className="field-label">시작 <span className="required">*</span></span>
+              <div className="datetime-inputs">
+                <input type="date" value={form.startDate} onChange={set('startDate')} required />
+                <div className="time-input-group">
+                  <input
+                    className="time-hour-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form.startHour}
+                    onChange={handleHourChange('start')}
+                    onBlur={handleHourBlur('start')}
+                    placeholder="시"
+                  />
+                  <span className="time-colon">:</span>
+                  <input
+                    className="time-minute-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form.startMinute}
+                    onChange={handleMinuteChange('start')}
+                    onBlur={handleMinuteBlur('start')}
+                    placeholder="분"
+                  />
+                  <AmPmSelect value={form.startAmPm} onChange={v => setForm(prev => ({ ...prev, startAmPm: v }))} />
+                </div>
               </div>
-            </label>
-            <label>
-              종료
-              <input type="date" value={form.endDate} onChange={set('endDate')} required />
-              <div className="time-select-wrap">
-                <input
-                  className="time-hour-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.endHour}
-                  onChange={handleHourChange('end')}
-                  onBlur={handleHourBlur('end')}
-                  placeholder="시"
-                />
-                <span className="time-colon">:</span>
-                <input
-                  className="time-minute-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.endMinute}
-                  onChange={handleMinuteChange('end')}
-                  onBlur={handleMinuteBlur('end')}
-                  placeholder="분"
-                />
-                <select value={form.endAmPm} onChange={set('endAmPm')}>
-                  <option value="오전">오전</option>
-                  <option value="오후">오후</option>
-                </select>
+            </div>
+            <div className="datetime-field">
+              <span className="field-label">종료 <span className="required">*</span></span>
+              <div className="datetime-inputs">
+                <input type="date" value={form.endDate} onChange={set('endDate')} required />
+                <div className="time-input-group">
+                  <input
+                    className="time-hour-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form.endHour}
+                    onChange={handleHourChange('end')}
+                    onBlur={handleHourBlur('end')}
+                    placeholder="시"
+                  />
+                  <span className="time-colon">:</span>
+                  <input
+                    className="time-minute-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form.endMinute}
+                    onChange={handleMinuteChange('end')}
+                    onBlur={handleMinuteBlur('end')}
+                    placeholder="분"
+                  />
+                  <AmPmSelect value={form.endAmPm} onChange={v => setForm(prev => ({ ...prev, endAmPm: v }))} />
+                </div>
               </div>
-            </label>
+            </div>
           </div>
 
           <label>
