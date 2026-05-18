@@ -77,8 +77,8 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   const [form, setForm] = useState(INITIAL)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
-  const startDateRef = useRef(null)
-  const endDateRef = useRef(null)
+  const startDtRef = useRef(null)
+  const endDtRef = useRef(null)
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -121,6 +121,38 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   if (!open) return null
 
   const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
+
+  // datetime-local 값으로 모든 시간 필드를 한번에 업데이트
+  function handleDtLocal(prefix) {
+    return e => {
+      const val = e.target.value
+      if (!val) return
+      const [datePart, timePart] = val.split('T')
+      const [h24Str, minStr] = timePart.split(':')
+      const { hour, ampm } = to12h(parseInt(h24Str, 10))
+      setForm(prev => ({
+        ...prev,
+        [`${prefix}Date`]: datePart,
+        [`${prefix}Hour`]: hour,
+        [`${prefix}Minute`]: minStr,
+        [`${prefix}AmPm`]: ampm,
+      }))
+    }
+  }
+
+  // 현재 폼 상태를 datetime-local value 형식으로 변환
+  function dtLocalValue(prefix) {
+    const date = form[`${prefix}Date`]
+    if (!date) return ''
+    const h24 = to24h(form[`${prefix}Hour`] || '0', form[`${prefix}AmPm`])
+    const m = parseInt(form[`${prefix}Minute`] || '0', 10)
+    const pad = n => String(n).padStart(2, '0')
+    return `${date}T${pad(h24)}:${pad(m)}`
+  }
+
+  function openPicker(ref) {
+    try { ref.current?.showPicker() } catch { ref.current?.focus() }
+  }
 
   function handleHourChange(prefix) {
     return e => {
@@ -167,7 +199,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     return () => {
       const m = parseInt(form[`${prefix}Minute`], 10)
       const clamped = isNaN(m) ? 0 : m
-      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '00') }))
+      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }))
     }
   }
 
@@ -212,10 +244,6 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     }
   }
 
-  function openPicker(ref) {
-    try { ref.current?.showPicker() } catch { ref.current?.focus() }
-  }
-
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
@@ -235,86 +263,59 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           </label>
 
           <div className="datetime-fields">
-            <div className="datetime-field">
-              <span className="field-label">시작 <span className="required">*</span></span>
-              <div className="datetime-box">
-                <input
-                  ref={startDateRef}
-                  type="date"
-                  className="date-input"
-                  value={form.startDate}
-                  onChange={set('startDate')}
-                  required
-                />
-                <span className="dt-divider" />
-                <input
-                  className="time-hour-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.startHour}
-                  onChange={handleHourChange('start')}
-                  onBlur={handleHourBlur('start')}
-                  placeholder="시"
-                />
-                <span className="time-colon">:</span>
-                <input
-                  className="time-minute-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.startMinute}
-                  onChange={handleMinuteChange('start')}
-                  onBlur={handleMinuteBlur('start')}
-                  placeholder="분"
-                />
-                <select className="ampm-select" value={form.startAmPm} onChange={set('startAmPm')}>
-                  <option value="오전">오전</option>
-                  <option value="오후">오후</option>
-                </select>
-                <button type="button" className="calendar-btn" onClick={() => openPicker(startDateRef)}>
-                  <CalendarIcon />
-                </button>
+            {[
+              { prefix: 'start', label: '시작', ref: startDtRef },
+              { prefix: 'end',   label: '종료', ref: endDtRef },
+            ].map(({ prefix, label, ref }) => (
+              <div key={prefix} className="datetime-field">
+                <span className="field-label">{label} <span className="required">*</span></span>
+                <div className="datetime-box">
+                  <input
+                    type="date"
+                    className="date-input"
+                    value={form[`${prefix}Date`]}
+                    onChange={set(`${prefix}Date`)}
+                    required
+                  />
+                  <input
+                    className="time-hour-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form[`${prefix}Hour`]}
+                    onChange={handleHourChange(prefix)}
+                    onBlur={handleHourBlur(prefix)}
+                    placeholder="시"
+                  />
+                  <span className="time-colon">:</span>
+                  <input
+                    className="time-minute-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={form[`${prefix}Minute`]}
+                    onChange={handleMinuteChange(prefix)}
+                    onBlur={handleMinuteBlur(prefix)}
+                    placeholder="분"
+                  />
+                  <select className="ampm-select" value={form[`${prefix}AmPm`]} onChange={set(`${prefix}AmPm`)}>
+                    <option value="오전">오전</option>
+                    <option value="오후">오후</option>
+                  </select>
+                  <div className="calendar-btn-wrap">
+                    <input
+                      ref={ref}
+                      type="datetime-local"
+                      className="hidden-dt-input"
+                      value={dtLocalValue(prefix)}
+                      onChange={handleDtLocal(prefix)}
+                      tabIndex={-1}
+                    />
+                    <button type="button" className="calendar-btn" onClick={() => openPicker(ref)}>
+                      <CalendarIcon />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="datetime-field">
-              <span className="field-label">종료 <span className="required">*</span></span>
-              <div className="datetime-box">
-                <input
-                  ref={endDateRef}
-                  type="date"
-                  className="date-input"
-                  value={form.endDate}
-                  onChange={set('endDate')}
-                  required
-                />
-                <span className="dt-divider" />
-                <input
-                  className="time-hour-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.endHour}
-                  onChange={handleHourChange('end')}
-                  onBlur={handleHourBlur('end')}
-                  placeholder="시"
-                />
-                <span className="time-colon">:</span>
-                <input
-                  className="time-minute-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.endMinute}
-                  onChange={handleMinuteChange('end')}
-                  onBlur={handleMinuteBlur('end')}
-                  placeholder="분"
-                />
-                <select className="ampm-select" value={form.endAmPm} onChange={set('endAmPm')}>
-                  <option value="오전">오전</option>
-                  <option value="오후">오후</option>
-                </select>
-                <button type="button" className="calendar-btn" onClick={() => openPicker(endDateRef)}>
-                  <CalendarIcon />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
 
           <label>

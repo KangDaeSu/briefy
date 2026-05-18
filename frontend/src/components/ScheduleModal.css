@@ -95,7 +95,7 @@
   color: #374151;
 }
 
-/* 날짜·시간·오전오후·달력 아이콘을 하나의 박스로 */
+/* 단일 박스 — 내부 입력 요소들은 모두 테두리 없음 */
 .datetime-box {
   display: flex;
   align-items: center;
@@ -103,58 +103,51 @@
   border-radius: 6px;
   background: #fff;
   transition: border-color 0.15s;
-  padding: 0 4px 0 0;
+  padding-right: 2px;
 }
 
 .datetime-box:focus-within {
   border-color: #3b82f6;
 }
 
-/* 날짜 입력 — 네이티브 달력 아이콘 숨기고 텍스트만 표시 */
+/* 날짜 입력: 박스 안에서 테두리 없음, 네이티브 달력 아이콘 숨김 */
 .datetime-box .date-input {
   flex: 1;
   min-width: 0;
-  border: none;
+  border: none !important;
   border-radius: 0;
   background: transparent;
-  padding: 8px 6px 8px 10px;
+  padding: 8px 4px 8px 10px;
   font-size: 14px;
   outline: none;
   font-family: inherit;
+  box-shadow: none;
 }
 
 .datetime-box .date-input::-webkit-calendar-picker-indicator {
   display: none;
 }
 
-/* 날짜와 시간 사이 얇은 구분 */
-.dt-divider {
-  width: 1px;
-  height: 18px;
-  background: #e5e7eb;
-  flex-shrink: 0;
-  margin: 0 4px;
-}
-
-/* 시간 입력 */
-.time-hour-input,
-.time-minute-input {
-  width: 28px;
+/* 시·분 입력: .modal-form input보다 높은 특이성(2-0 > 1-1)으로 테두리 완전 제거 */
+.datetime-box .time-hour-input,
+.datetime-box .time-minute-input {
+  width: 26px;
   text-align: center;
-  border: none;
+  border: none !important;
   border-radius: 0;
   background: transparent;
   padding: 8px 2px;
   font-size: 14px;
   outline: none;
   font-family: inherit;
+  box-shadow: none;
   -moz-appearance: textfield;
 }
 
-.time-hour-input::-webkit-outer-spin-button,
-.time-hour-input::-webkit-inner-spin-button,
-.time-minute-input::-webkit-outer-spin-button,
-.time-minute-input::-webkit-inner-spin-button {
+.datetime-box .time-hour-input::-webkit-outer-spin-button,
+.datetime-box .time-hour-input::-webkit-inner-spin-button,
+.datetime-box .time-minute-input::-webkit-outer-spin-button,
+.datetime-box .time-minute-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -164,27 +157,45 @@
   font-weight: 600;
   color: #374151;
   user-select: none;
-  padding: 0 1px;
+  flex-shrink: 0;
 }
 
-/* 오전/오후 네이티브 셀렉트 */
+/* 오전/오후 셀렉트: 박스 안에서 테두리 없음 */
 .datetime-box .ampm-select {
-  border: none;
+  border: none !important;
   border-radius: 0;
   background: transparent;
-  padding: 8px 4px;
+  padding: 8px 2px 8px 4px;
   font-size: 14px;
   outline: none;
   font-family: inherit;
   cursor: pointer;
   color: #374151;
-  appearance: none;
-  -webkit-appearance: none;
-  text-align: center;
-  min-width: 36px;
+  box-shadow: none;
 }
 
-/* 달력 아이콘 버튼 */
+/* 달력 버튼 래퍼 — 숨긴 datetime-local input 위에 버튼을 겹침 */
+.calendar-btn-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.hidden-dt-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  border: none !important;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  box-shadow: none;
+}
+
 .calendar-btn {
   display: flex;
   align-items: center;
@@ -195,7 +206,6 @@
   cursor: pointer;
   color: #9ca3af;
   border-radius: 4px;
-  flex-shrink: 0;
 }
 
 .calendar-btn:hover {
