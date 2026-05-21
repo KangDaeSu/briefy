@@ -49,6 +49,9 @@ public class Schedule {
     @Column(length = 500)
     private String rrule;
 
+    @Column(name = "skip_holidays", nullable = false)
+    private boolean skipHolidays = false;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -62,7 +65,7 @@ public class Schedule {
 
     public Schedule(@NonNull User user, @NonNull String title, @Nullable String description,
                     @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
-                    @Nullable String rrule) {
+                    @Nullable String rrule, boolean skipHolidays) {
         if (!endTime.isAfter(startTime)) {
             throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
@@ -72,6 +75,7 @@ public class Schedule {
         this.startTime = startTime;
         this.endTime = endTime;
         this.rrule = rrule;
+        this.skipHolidays = skipHolidays;
     }
 
     public UUID getId() { return id; }
@@ -94,13 +98,15 @@ public class Schedule {
     @Nullable
     public String getRrule() { return rrule; }
 
+    public boolean isSkipHolidays() { return skipHolidays; }
+
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 
     public void update(@NonNull String title, @Nullable String description,
                        @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
-                       @Nullable String rrule) {
+                       @Nullable String rrule, boolean skipHolidays) {
         if (!endTime.isAfter(startTime)) {
             throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
@@ -109,5 +115,6 @@ public class Schedule {
         this.startTime = startTime;
         this.endTime = endTime;
         this.rrule = rrule;
+        this.skipHolidays = skipHolidays;
     }
 }

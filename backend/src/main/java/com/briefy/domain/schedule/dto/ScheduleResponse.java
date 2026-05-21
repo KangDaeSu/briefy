@@ -15,6 +15,7 @@ public record ScheduleResponse(
     OffsetDateTime endTime,
     @Nullable String rrule,
     boolean recurring,
+    boolean skipHolidays,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt
 ) {
@@ -28,6 +29,7 @@ public record ScheduleResponse(
             s.getEndTime(),
             s.getRrule(),
             s.getRrule() != null,
+            s.isSkipHolidays(),
             s.getCreatedAt(),
             s.getUpdatedAt()
         );

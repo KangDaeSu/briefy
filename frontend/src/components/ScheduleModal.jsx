@@ -60,6 +60,7 @@ const INITIAL = {
   endMinute: '00',
   endAmPm: '오전',
   rrule: '',
+  skipHolidays: false,
 }
 
 function CalendarIcon() {
@@ -98,6 +99,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
         endMinute: e.minute,
         endAmPm: e.ampm,
         rrule: schedule.rrule ?? '',
+        skipHolidays: schedule.skipHolidays ?? false,
       })
     } else if (defaultDate) {
       const pad = n => String(n).padStart(2, '0')
@@ -222,6 +224,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
         startTime: fieldsToISO(form.startDate, form.startHour, form.startMinute, form.startAmPm),
         endTime: fieldsToISO(form.endDate, form.endHour, form.endMinute, form.endAmPm),
         rrule: form.rrule || null,
+        skipHolidays: form.skipHolidays,
       })
       onClose()
     } catch (err) {
@@ -331,6 +334,16 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
                 onChange={set('rrule')}
                 placeholder="예: FREQ=WEEKLY;BYDAY=MO,WE,FR"
               />
+            )}
+            {form.rrule && (
+              <label className="skip-holidays-opt">
+                <input
+                  type="checkbox"
+                  checked={form.skipHolidays}
+                  onChange={e => setForm(prev => ({ ...prev, skipHolidays: e.target.checked }))}
+                />
+                공휴일·대체휴일 건너뛰기
+              </label>
             )}
           </label>
 

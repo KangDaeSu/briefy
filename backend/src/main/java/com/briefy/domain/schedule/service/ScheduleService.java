@@ -11,6 +11,7 @@ import com.briefy.domain.schedule.repository.ScheduleRepository;
 import com.briefy.domain.user.service.UserService;
 import com.briefy.global.error.BriefyErrorCode;
 import com.briefy.global.error.BriefyException;
+import com.briefy.global.util.KoreanHolidays;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class ScheduleService {
     private static final int RRULE_OCCURRENCE_LIMIT = 500;
     private static final DateTimeFormatter ICAL_DATE_FMT =
         DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final ScheduleRepository scheduleRepository;
     private final UserService userService;
@@ -49,7 +52,7 @@ public class ScheduleService {
     public ScheduleResponse create(UUID userId, ScheduleRequest req) {
         var user = userService.findById(userId);
         var schedule = new Schedule(user, req.title(), req.description(),
-                req.startTime(), req.endTime(), req.rrule());
+                req.startTime(), req.endTime(), req.rrule(), req.skipHolidays());
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
@@ -65,7 +68,7 @@ public class ScheduleService {
 
         scheduleRepository.findRecurringByUser(userId, to).forEach(s -> {
             Duration duration = Duration.between(s.getStartTime(), s.getEndTime());
-            expandRrule(s.getRrule(), s.getStartTime(), from, to).forEach(occ ->
+            expandRrule(s.getRrule(), s.getStartTime(), from, to, s.isSkipHolidays()).forEach(occ ->
                 events.add(ScheduleEventResponse.occurrence(s, occ, occ.plus(duration)))
             );
         });
@@ -77,7 +80,8 @@ public class ScheduleService {
     @Transactional
     public ScheduleResponse update(UUID userId, UUID scheduleId, ScheduleRequest req) {
         var schedule = findOwnedSchedule(userId, scheduleId);
-        schedule.update(req.title(), req.description(), req.startTime(), req.endTime(), req.rrule());
+        schedule.update(req.title(), req.description(), req.startTime(), req.endTime(),
+                req.rrule(), req.skipHolidays());
         return ScheduleResponse.from(schedule);
     }
 
@@ -96,7 +100,8 @@ public class ScheduleService {
     }
 
     private List<OffsetDateTime> expandRrule(@Nullable String rrule, OffsetDateTime dtStart,
-                                             OffsetDateTime rangeStart, OffsetDateTime rangeEnd) {
+                                             OffsetDateTime rangeStart, OffsetDateTime rangeEnd,
+                                             boolean skipHolidays) {
         if (rrule == null) return List.of();
         try {
             String dtStartStr = dtStart.withOffsetSameInstant(ZoneOffset.UTC).format(ICAL_DATE_FMT);
@@ -117,9 +122,9 @@ public class ScheduleService {
                 Date occ = it.next();
                 OffsetDateTime odt = occ.toInstant().atOffset(ZoneOffset.UTC);
                 if (odt.isAfter(rangeEnd)) break;
-                if (!odt.isBefore(rangeStart)) {
-                    occurrences.add(odt);
-                }
+                if (odt.isBefore(rangeStart)) continue;
+                if (skipHolidays && KoreanHolidays.isHoliday(odt.atZoneSameInstant(KST).toLocalDate())) continue;
+                occurrences.add(odt);
             }
             return occurrences;
         } catch (Exception e) {
