@@ -336,14 +336,15 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
               />
             )}
             {form.rrule && (
-              <label className="skip-holidays-opt">
+              <div className="skip-holidays-opt">
                 <input
+                  id="skip-holidays-cb"
                   type="checkbox"
                   checked={form.skipHolidays}
                   onChange={e => setForm(prev => ({ ...prev, skipHolidays: e.target.checked }))}
                 />
-                공휴일·대체휴일 건너뛰기
-              </label>
+                <label htmlFor="skip-holidays-cb">공휴일·대체휴일 건너뛰기</label>
+              </div>
             )}
           </label>
 

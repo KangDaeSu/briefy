@@ -86,7 +86,7 @@ export default function MonthCalendar({ year, month, events, selectedDate, onSel
               </div>
               <div className="cal-cell__events">
                 {dayEvents.slice(0, 3).map((ev, idx) => (
-                  <div key={idx} className={`cal-event-dot ${ev.recurring ? 'cal-event-dot--recurring' : ''}`}>
+                  <div key={ev.id ?? idx} className={`cal-event-dot ${ev.recurring ? 'cal-event-dot--recurring' : ''}`}>
                     {ev.title}
                   </div>
                 ))}

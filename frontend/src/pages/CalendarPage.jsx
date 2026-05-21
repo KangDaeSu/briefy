@@ -90,8 +90,13 @@ export default function CalendarPage() {
     setModal({ open: true, schedule: null })
   }
 
-  function openEdit(ev) {
-    setModal({ open: true, schedule: ev })
+  async function openEdit(ev) {
+    try {
+      const res = await schedulesApi.getOne(ev.id)
+      setModal({ open: true, schedule: res.data })
+    } catch {
+      setModal({ open: true, schedule: ev })
+    }
   }
 
   function fmt(iso) {

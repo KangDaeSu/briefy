@@ -181,4 +181,27 @@ class ScheduleServiceTest {
         assertThat(events.size()).isGreaterThanOrEqualTo(3);
         assertThat(events).allMatch(e -> e.recurring());
     }
+
+    @Test
+    void listEvents_skipHolidays_excludesBuddhasBirthday() {
+        // 2026-05-24~28: 5일 중 2026-05-25 부처님오신날 제외 → 4건 (rangeEnd inclusive)
+        OffsetDateTime from = OffsetDateTime.parse("2026-05-24T00:00:00Z");
+        OffsetDateTime to   = OffsetDateTime.parse("2026-05-28T00:00:00Z");
+
+        OffsetDateTime dtStart = OffsetDateTime.parse("2026-05-01T00:00:00Z");
+        Schedule daily = new Schedule(user, "매일 회의", null,
+                dtStart, dtStart.plusHours(1), "FREQ=DAILY", true);
+        ReflectionTestUtils.setField(daily, "id", UUID.randomUUID());
+
+        when(scheduleRepository.findNonRecurringByUserAndRange(userId, from, to))
+                .thenReturn(List.of());
+        when(scheduleRepository.findRecurringByUser(userId, to))
+                .thenReturn(List.of(daily));
+
+        var events = scheduleService.listEvents(userId, from, to);
+
+        assertThat(events).hasSize(4);
+        assertThat(events).noneMatch(e ->
+                e.startTime().toLocalDate().toString().equals("2026-05-25"));
+    }
 }

@@ -117,8 +117,7 @@ public class ScheduleService {
             var it = event.getDateIterator(TimeZone.getTimeZone("UTC"));
 
             List<OffsetDateTime> occurrences = new ArrayList<>();
-            int count = 0;
-            while (it.hasNext() && count++ < RRULE_OCCURRENCE_LIMIT) {
+            while (it.hasNext() && occurrences.size() < RRULE_OCCURRENCE_LIMIT) {
                 Date occ = it.next();
                 OffsetDateTime odt = occ.toInstant().atOffset(ZoneOffset.UTC);
                 if (odt.isAfter(rangeEnd)) break;
