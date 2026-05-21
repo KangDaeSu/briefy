@@ -138,7 +138,6 @@ export default function LoginPage() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
-                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus={!!selectedAccount}
               />
             </label>
