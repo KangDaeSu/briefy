@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { getHoliday } from '../utils/holidays'
 import './MonthCalendar.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -13,7 +14,6 @@ function getMonthGrid(year, month) {
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
   const cells = []
-  // 앞쪽 빈 칸 (일요일 기준)
   for (let i = 0; i < firstDay.getDay(); i++) cells.push(null)
   for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d))
   return cells
@@ -23,7 +23,6 @@ export default function MonthCalendar({ year, month, events, selectedDate, onSel
   const today = new Date()
   const cells = useMemo(() => getMonthGrid(year, month), [year, month])
 
-  // 날짜별 이벤트 맵
   const eventMap = useMemo(() => {
     const map = {}
     events.forEach(ev => {
@@ -38,7 +37,18 @@ export default function MonthCalendar({ year, month, events, selectedDate, onSel
   return (
     <div className="month-calendar">
       <div className="cal-header">
-        {DAYS.map(d => <div key={d} className="cal-day-name">{d}</div>)}
+        {DAYS.map((d, i) => (
+          <div
+            key={d}
+            className={[
+              'cal-day-name',
+              i === 0 && 'cal-day-name--sun',
+              i === 6 && 'cal-day-name--sat',
+            ].filter(Boolean).join(' ')}
+          >
+            {d}
+          </div>
+        ))}
       </div>
       <div className="cal-grid">
         {cells.map((date, i) => {
@@ -47,6 +57,11 @@ export default function MonthCalendar({ year, month, events, selectedDate, onSel
           const dayEvents = eventMap[key] ?? []
           const isToday = isSameDay(date, today)
           const isSelected = selectedDate && isSameDay(date, selectedDate)
+          const dow = date.getDay()
+          const holiday = getHoliday(date)
+          const isRed = dow === 0 || holiday !== null
+          const isSat = dow === 6
+
           return (
             <div
               key={key}
@@ -54,10 +69,21 @@ export default function MonthCalendar({ year, month, events, selectedDate, onSel
                 'cal-cell',
                 isToday && 'cal-cell--today',
                 isSelected && 'cal-cell--selected',
+                isRed && 'cal-cell--red-day',
+                isSat && 'cal-cell--sat-day',
               ].filter(Boolean).join(' ')}
               onClick={() => onSelectDate(date)}
             >
-              <span className="cal-cell__date">{date.getDate()}</span>
+              <div className="cal-cell__top">
+                <span className={[
+                  'cal-cell__date',
+                  !isToday && isRed && 'cal-cell__date--red',
+                  !isToday && isSat && 'cal-cell__date--blue',
+                ].filter(Boolean).join(' ')}>
+                  {date.getDate()}
+                </span>
+                {holiday && <span className="cal-cell__holiday">{holiday}</span>}
+              </div>
               <div className="cal-cell__events">
                 {dayEvents.slice(0, 3).map((ev, idx) => (
                   <div key={idx} className={`cal-event-dot ${ev.recurring ? 'cal-event-dot--recurring' : ''}`}>
