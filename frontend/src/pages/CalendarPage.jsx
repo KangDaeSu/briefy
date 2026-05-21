@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import MonthCalendar from '../components/MonthCalendar'
 import ScheduleModal from '../components/ScheduleModal'
+import YearMonthPicker from '../components/YearMonthPicker'
 import { schedulesApi } from '../api/schedules'
 import './CalendarPage.css'
 
@@ -16,6 +17,17 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
   const [modal, setModal] = useState({ open: false, schedule: null })
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const ymWrapRef = useRef(null)
+
+  useEffect(() => {
+    if (!pickerOpen) return
+    function onMouseDown(e) {
+      if (!ymWrapRef.current?.contains(e.target)) setPickerOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [pickerOpen])
 
   const fetchEvents = useCallback(async (y, m, signal) => {
     setLoading(true)
@@ -91,7 +103,26 @@ export default function CalendarPage() {
       <header className="cal-page__header">
         <div className="cal-page__nav">
           <button className="nav-btn" onClick={prevMonth}>‹</button>
-          <h1>{year}년 {MONTH_NAMES[month]}</h1>
+          <div className="cal-page__ym-wrap" ref={ymWrapRef}>
+            <button
+              className={`cal-page__ym-btn${pickerOpen ? ' cal-page__ym-btn--open' : ''}`}
+              onClick={() => setPickerOpen(p => !p)}
+            >
+              {year}년 {MONTH_NAMES[month]}
+              <svg className="cal-page__ym-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                {pickerOpen
+                  ? <polyline points="1,7 5,3 9,7" />
+                  : <polyline points="1,3 5,7 9,3" />}
+              </svg>
+            </button>
+            {pickerOpen && (
+              <YearMonthPicker
+                year={year}
+                month={month}
+                onSelect={(y, m) => { setYear(y); setMonth(m); setPickerOpen(false) }}
+              />
+            )}
+          </div>
           <button className="nav-btn" onClick={nextMonth}>›</button>
         </div>
         <button className="btn-add" onClick={openCreate}>+ 일정 추가</button>

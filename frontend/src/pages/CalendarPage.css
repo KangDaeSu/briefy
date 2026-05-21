@@ -17,12 +17,37 @@
   gap: 12px;
 }
 
-.cal-page__nav h1 {
+.cal-page__ym-wrap {
+  position: relative;
+}
+
+.cal-page__ym-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
   font-size: 20px;
   font-weight: 700;
-  margin: 0;
+  font-family: inherit;
+  color: #111827;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
   min-width: 140px;
-  text-align: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+
+.cal-page__ym-btn:hover,
+.cal-page__ym-btn--open {
+  background: #f3f4f6;
+}
+
+.cal-page__ym-chevron {
+  flex-shrink: 0;
+  color: #6b7280;
+  margin-top: 1px;
 }
 
 .nav-btn {
