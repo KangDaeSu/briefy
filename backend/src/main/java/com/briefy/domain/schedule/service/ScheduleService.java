@@ -52,7 +52,7 @@ public class ScheduleService {
     public ScheduleResponse create(UUID userId, ScheduleRequest req) {
         var user = userService.findById(userId);
         var schedule = new Schedule(user, req.title(), req.description(),
-                req.startTime(), req.endTime(), req.rrule(), req.skipHolidays());
+                req.startTime(), req.endTime(), req.rrule(), Boolean.TRUE.equals(req.skipHolidays()));
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
@@ -81,7 +81,7 @@ public class ScheduleService {
     public ScheduleResponse update(UUID userId, UUID scheduleId, ScheduleRequest req) {
         var schedule = findOwnedSchedule(userId, scheduleId);
         schedule.update(req.title(), req.description(), req.startTime(), req.endTime(),
-                req.rrule(), req.skipHolidays());
+                req.rrule(), Boolean.TRUE.equals(req.skipHolidays()));
         return ScheduleResponse.from(schedule);
     }
 

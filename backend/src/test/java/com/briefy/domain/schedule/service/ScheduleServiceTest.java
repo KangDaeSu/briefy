@@ -60,7 +60,7 @@ class ScheduleServiceTest {
         when(userService.findById(userId)).thenReturn(user);
         when(scheduleRepository.save(any())).thenReturn(schedule);
 
-        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, false);
+        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null);
         var result = scheduleService.create(userId, req);
 
         assertThat(result.title()).isEqualTo("스탠드업");
@@ -71,7 +71,7 @@ class ScheduleServiceTest {
     void create_userNotFound_throws() {
         when(userService.findById(any())).thenThrow(new BriefyException(BriefyErrorCode.USER_NOT_FOUND));
 
-        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, false);
+        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null);
 
         assertThatThrownBy(() -> scheduleService.create(userId, req))
                 .isInstanceOf(BriefyException.class)
@@ -121,7 +121,7 @@ class ScheduleServiceTest {
         when(scheduleRepository.findByIdAndUserId(scheduleId, userId))
                 .thenReturn(Optional.of(schedule));
 
-        var req = new ScheduleRequest("수정된 제목", "설명", startTime, endTime, null, false);
+        var req = new ScheduleRequest("수정된 제목", "설명", startTime, endTime, null, null);
         var result = scheduleService.update(userId, scheduleId, req);
 
         assertThat(result.title()).isEqualTo("수정된 제목");

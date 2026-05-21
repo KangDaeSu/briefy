@@ -12,5 +12,5 @@ public record ScheduleRequest(
     @NotNull OffsetDateTime startTime,
     @NotNull OffsetDateTime endTime,
     @Nullable String rrule,
-    boolean skipHolidays
+    @Nullable Boolean skipHolidays
 ) {}
