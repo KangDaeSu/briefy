@@ -8,6 +8,7 @@ import com.briefy.global.error.BriefyErrorCode;
 import com.briefy.global.error.BriefyException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.HexFormat;
 
 @Service
+@ConditionalOnBean(JavaMailSender.class)
 @Transactional(readOnly = true)
 public class PasswordResetService {
 

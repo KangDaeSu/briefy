@@ -29,13 +29,13 @@ spring:
     baseline-on-migrate: false
     repair-on-migrate: false
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration-ms: 604800000  # 7일
-
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 604800000  # 7일
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
