@@ -216,6 +216,41 @@ this.secretKey = Keys.hmacShaKeyFor(sha256(props.secret().strip()));
 
 ---
 
+### [2026-05-23] YAML 들여쓰기 오류로 `spring.mail` 설정 유실
+**증상**: `JavaMailSender` 빈 생성 실패 — `No qualifying bean of type 'JavaMailSender' available`
+**원인**: `mail:` 블록을 `spring:` 아래가 아닌 `jwt:` 아래에 들여쓰기해서 `jwt.mail.host`로 바인딩됨. `spring.mail.host`는 미설정 상태 → `MailSenderAutoConfiguration`이 실행되지 않아 `JavaMailSender` 빈 미생성
+```yaml
+# 잘못된 예 (jwt.mail.host로 바인딩)
+jwt:
+  secret: ${JWT_SECRET}
+  mail:          # ← spring 아래가 아닌 jwt 아래
+    host: localhost
+
+# 올바른 예
+spring:
+  mail:
+    host: localhost
+jwt:
+  secret: ${JWT_SECRET}
+```
+**교훈**: `spring.*` 하위 설정은 들여쓰기 한 단계만 틀려도 완전히 다른 키로 바인딩됨. 새 설정 블록 추가 시 루트 키(`spring:`, `server:` 등) 위치를 먼저 확인할 것
+
+---
+
+### [2026-05-23] `spring.mail` 활성화 시 `MailHealthIndicator`가 Railway Healthcheck 실패
+**증상**: 앱 정상 기동 후에도 Railway Healthcheck가 주기적으로 실패. 메일 기능은 주석처리된 상태인데도 발생
+**원인**: `spring.mail.host`가 설정되면 `JavaMailSender` 빈이 생성되고, Spring Boot Actuator가 `MailHealthIndicator`를 자동 등록. Healthcheck(`/actuator/health`) 호출마다 SMTP 서버(localhost:1025)에 연결을 시도하는데, Railway에는 Mailpit이 없으므로 `Connection refused` → 헬스 상태 `DOWN` → Railway가 배포 실패 처리
+**해결**: 메일 헬스 인디케이터 비활성화
+```yaml
+management:
+  health:
+    mail:
+      enabled: false
+```
+**교훈**: `spring.mail`을 설정하면 메일 기능을 쓰지 않아도 Actuator가 SMTP 핑을 보낸다. 메일 서버가 없는 환경(개발/배포)에서는 `management.health.mail.enabled: false`를 함께 추가할 것
+
+---
+
 ### [2026-05-17] Railway 배포 — `SPRING_DATASOURCE_URL` 형식 오류
 **증상**: DB 연결 실패
 **원인**: Railway Postgres의 `DATABASE_URL`은 `postgresql://...` 형식. Spring Boot JDBC는 `jdbc:postgresql://...` 형식 요구
