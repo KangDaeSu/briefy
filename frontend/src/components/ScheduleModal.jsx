@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import './ScheduleModal.css'
 
+const EVENT_COLORS = [
+  '#3b82f6', '#10b981', '#f59e0b',
+  '#ef4444', '#8b5cf6', '#ec4899', '#6b7280',
+]
+
 const RRULE_OPTIONS = [
   { value: '', label: '반복 없음' },
   { value: 'FREQ=DAILY', label: '매일' },
@@ -51,6 +56,7 @@ function fieldsToISO(date, hour, minute, ampm) {
 const INITIAL = {
   title: '',
   description: '',
+  color: '#3b82f6',
   startDate: '',
   startHour: '9',
   startMinute: '00',
@@ -90,6 +96,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
       setForm({
         title: schedule.title,
         description: schedule.description ?? '',
+        color: schedule.color ?? '#3b82f6',
         startDate: s.date,
         startHour: s.hour,
         startMinute: s.minute,
@@ -221,6 +228,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
       await onSave({
         title: form.title,
         description: form.description || null,
+        color: form.color,
         startTime: fieldsToISO(form.startDate, form.startHour, form.startMinute, form.startAmPm),
         endTime: fieldsToISO(form.endDate, form.endHour, form.endMinute, form.endAmPm),
         rrule: form.rrule || null,
@@ -256,6 +264,22 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
+          <label>
+            색상
+            <div className="color-picker">
+              {EVENT_COLORS.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`color-swatch${form.color === c ? ' color-swatch--selected' : ''}`}
+                  style={{ background: c }}
+                  onClick={() => setForm(prev => ({ ...prev, color: c }))}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+          </label>
+
           <label>
             제목 <span className="required">*</span>
             <input value={form.title} onChange={set('title')} required placeholder="일정 제목" />

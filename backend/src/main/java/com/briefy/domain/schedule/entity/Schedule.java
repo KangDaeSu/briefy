@@ -52,6 +52,10 @@ public class Schedule {
     @Column(name = "skip_holidays", nullable = false)
     private boolean skipHolidays = false;
 
+    @NonNull
+    @Column(nullable = false, length = 7)
+    private String color = "#3b82f6";
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -65,7 +69,7 @@ public class Schedule {
 
     public Schedule(@NonNull User user, @NonNull String title, @Nullable String description,
                     @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
-                    @Nullable String rrule, boolean skipHolidays) {
+                    @Nullable String rrule, boolean skipHolidays, @NonNull String color) {
         if (!endTime.isAfter(startTime)) {
             throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
@@ -76,6 +80,7 @@ public class Schedule {
         this.endTime = endTime;
         this.rrule = rrule;
         this.skipHolidays = skipHolidays;
+        this.color = color;
     }
 
     public UUID getId() { return id; }
@@ -100,13 +105,16 @@ public class Schedule {
 
     public boolean isSkipHolidays() { return skipHolidays; }
 
+    @NonNull
+    public String getColor() { return color; }
+
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 
     public void update(@NonNull String title, @Nullable String description,
                        @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime,
-                       @Nullable String rrule, boolean skipHolidays) {
+                       @Nullable String rrule, boolean skipHolidays, @NonNull String color) {
         if (!endTime.isAfter(startTime)) {
             throw new BriefyException(BriefyErrorCode.SCHEDULE_INVALID_TIME);
         }
@@ -116,5 +124,6 @@ public class Schedule {
         this.endTime = endTime;
         this.rrule = rrule;
         this.skipHolidays = skipHolidays;
+        this.color = color;
     }
 }

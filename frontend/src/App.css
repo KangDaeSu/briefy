@@ -3,8 +3,9 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #fff;
-  color: #111827;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s, color 0.2s;
 }
 
 .app {
@@ -15,21 +16,22 @@ body {
 
 .app-nav {
   height: 52px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  background: var(--bg);
 }
 
 .app-logo {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  color: #111827;
+  color: var(--text);
   text-decoration: none;
 }
-.app-logo:hover { color: #374151; }
+.app-logo:hover { color: var(--text-secondary); }
 
 .app-nav__user {
   display: flex;
@@ -39,21 +41,47 @@ body {
 
 .app-nav__name {
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary);
   text-decoration: none;
 }
 .app-nav__name:hover { text-decoration: underline; }
 
 .app-nav__logout {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-muted);
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px 10px;
   cursor: pointer;
 }
-.app-nav__logout:hover { background: #f9fafb; }
+.app-nav__logout:hover { background: var(--bg-hover); }
+
+.app-nav__theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: background 0.1s;
+}
+.app-nav__theme-btn:hover { background: var(--bg-hover); }
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+main {
+  flex: 1;
+}
 
 @media (max-width: 640px) {
   .app-nav {
@@ -62,17 +90,4 @@ body {
   .app-nav__name {
     display: none;
   }
-}
-
-.app-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-main {
-  flex: 1;
 }

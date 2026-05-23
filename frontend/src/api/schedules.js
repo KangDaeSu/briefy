@@ -7,4 +7,5 @@ export const schedulesApi = {
   create: (data) => api.post('/api/v1/schedules', data),
   update: (id, data) => api.patch(`/api/v1/schedules/${id}`, data),
   delete: (id) => api.delete(`/api/v1/schedules/${id}`),
+  search: (q) => api.get(`/api/v1/schedules/search?q=${encodeURIComponent(q)}`),
 }

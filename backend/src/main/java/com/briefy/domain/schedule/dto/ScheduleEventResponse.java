@@ -17,19 +17,20 @@ public record ScheduleEventResponse(
     OffsetDateTime startTime,
     OffsetDateTime endTime,
     @Nullable String rrule,
-    boolean recurring
+    boolean recurring,
+    String color
 ) {
     public static ScheduleEventResponse from(Schedule s) {
         return new ScheduleEventResponse(
             s.getId(), s.getTitle(), s.getDescription(),
-            s.getStartTime(), s.getEndTime(), s.getRrule(), false
+            s.getStartTime(), s.getEndTime(), s.getRrule(), false, s.getColor()
         );
     }
 
     public static ScheduleEventResponse occurrence(Schedule s, OffsetDateTime start, OffsetDateTime end) {
         return new ScheduleEventResponse(
             s.getId(), s.getTitle(), s.getDescription(),
-            start, end, s.getRrule(), true
+            start, end, s.getRrule(), true, s.getColor()
         );
     }
 }

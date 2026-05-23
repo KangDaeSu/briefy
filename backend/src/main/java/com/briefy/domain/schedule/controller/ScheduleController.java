@@ -42,6 +42,13 @@ public class ScheduleController {
         return ApiResponse.ok(scheduleService.listEvents(principal.getUserId(), from, to));
     }
 
+    @GetMapping("/search")
+    public ApiResponse<List<ScheduleResponse>> search(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam String q) {
+        return ApiResponse.ok(scheduleService.search(principal.getUserId(), q));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<ScheduleResponse> getOne(
             @AuthenticationPrincipal UserPrincipal principal,

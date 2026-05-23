@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,11 +9,11 @@
 }
 
 .modal-box {
-  background: #fff;
+  background: var(--bg);
   border-radius: 12px;
   width: 480px;
   max-width: calc(100vw - 32px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
@@ -22,13 +22,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
 }
 
 .modal-header h2 {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
+  color: var(--text);
 }
 
 .modal-close {
@@ -36,7 +37,7 @@
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: #6b7280;
+  color: var(--text-muted);
   padding: 4px;
   line-height: 1;
 }
@@ -54,27 +55,51 @@
   gap: 5px;
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .modal-form input,
 .modal-form textarea,
 .modal-form select {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-input);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s;
   font-family: inherit;
-  background: #fff;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .modal-form input:focus,
 .modal-form textarea:focus,
 .modal-form select:focus {
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
+
+/* 색상 선택 */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 0;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+  outline: none;
+  padding: 0;
+}
+
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch--selected { border-color: var(--text); transform: scale(1.15); }
 
 /* datetime 레이아웃 */
 .datetime-fields {
@@ -92,25 +117,23 @@
 .field-label {
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
-/* 단일 박스 — 내부 입력 요소들은 모두 테두리 없음 */
 .datetime-box {
   display: flex;
   align-items: center;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-input);
   border-radius: 6px;
-  background: #fff;
+  background: var(--bg);
   transition: border-color 0.15s;
   padding-right: 2px;
 }
 
 .datetime-box:focus-within {
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
 
-/* 날짜 입력: 박스 안에서 테두리 없음, 네이티브 달력 아이콘 숨김 */
 .datetime-box .date-input {
   flex: 0 0 auto;
   min-width: 0;
@@ -122,13 +145,13 @@
   outline: none;
   font-family: inherit;
   box-shadow: none;
+  color: var(--text);
 }
 
 .datetime-box .date-input::-webkit-calendar-picker-indicator {
   display: none;
 }
 
-/* 시·분 입력: .modal-form input보다 높은 특이성(2-0 > 1-1)으로 테두리 완전 제거 */
 .datetime-box .time-hour-input,
 .datetime-box .time-minute-input {
   width: 26px;
@@ -141,6 +164,7 @@
   outline: none;
   font-family: inherit;
   box-shadow: none;
+  color: var(--text);
   -moz-appearance: textfield;
 }
 
@@ -155,12 +179,11 @@
 .time-colon {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-secondary);
   user-select: none;
   flex-shrink: 0;
 }
 
-/* 오전/오후 셀렉트: 박스 안에서 테두리 없음 */
 .datetime-box .ampm-select {
   border: none !important;
   border-radius: 0;
@@ -170,11 +193,10 @@
   outline: none;
   font-family: inherit;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-secondary);
   box-shadow: none;
 }
 
-/* 달력 버튼 래퍼 — 숨긴 datetime-local input 위에 버튼을 겹침 */
 .calendar-btn-wrap {
   position: relative;
   display: flex;
@@ -204,17 +226,17 @@
   border: none;
   padding: 6px 6px;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--text-faint);
   border-radius: 4px;
 }
 
 .calendar-btn:hover {
-  color: #6b7280;
-  background: #f3f4f6;
+  color: var(--text-muted);
+  background: var(--bg-hover);
 }
 
-.required { color: #ef4444; }
-.hint { font-weight: 400; color: #9ca3af; }
+.required { color: var(--red); }
+.hint { font-weight: 400; color: var(--text-faint); }
 
 .skip-holidays-opt {
   display: flex;
@@ -223,7 +245,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px 0 0;
 }
@@ -231,18 +253,18 @@
 .skip-holidays-opt input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-input);
   border-radius: 3px;
   cursor: pointer;
-  accent-color: #111827;
+  accent-color: var(--btn-primary-bg);
   padding: 0;
   flex-shrink: 0;
 }
 
 .modal-error {
   font-size: 13px;
-  color: #ef4444;
-  background: #fef2f2;
+  color: var(--red);
+  background: var(--red-bg);
   border-radius: 6px;
   padding: 8px 12px;
   margin: 0;
@@ -273,14 +295,14 @@
 
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn--primary { background: #111827; color: #fff; }
-.btn--primary:hover:not(:disabled) { background: #374151; }
+.btn--primary { background: var(--btn-primary-bg); color: var(--btn-primary-text); }
+.btn--primary:hover:not(:disabled) { background: var(--btn-primary-hover); }
 
-.btn--ghost { background: #f3f4f6; color: #374151; }
-.btn--ghost:hover:not(:disabled) { background: #e5e7eb; }
+.btn--ghost { background: var(--bg-hover); color: var(--text-secondary); }
+.btn--ghost:hover:not(:disabled) { background: var(--bg-active); }
 
-.btn--danger { background: #fef2f2; color: #dc2626; }
-.btn--danger:hover:not(:disabled) { background: #fee2e2; }
+.btn--danger { background: var(--red-bg); color: var(--red); }
+.btn--danger:hover:not(:disabled) { background: var(--red-bg-hover); }
 
 @media (max-width: 640px) {
   .modal-overlay {

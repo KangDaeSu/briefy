@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useDeferredValue } from 'react'
 import MonthCalendar from '../components/MonthCalendar'
 import ScheduleModal from '../components/ScheduleModal'
 import YearMonthPicker from '../components/YearMonthPicker'
@@ -18,6 +18,10 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [modal, setModal] = useState({ open: false, schedule: null })
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const deferredQuery = useDeferredValue(searchQuery)
   const ymWrapRef = useRef(null)
 
   useEffect(() => {
@@ -50,6 +54,18 @@ export default function CalendarPage() {
     fetchEvents(year, month, controller.signal)
     return () => controller.abort()
   }, [year, month, fetchEvents])
+
+  useEffect(() => {
+    const q = deferredQuery.trim()
+    if (!q) { setSearchResults([]); return }
+    let cancelled = false
+    setSearchLoading(true)
+    schedulesApi.search(q)
+      .then(res => { if (!cancelled) setSearchResults(res.data ?? []) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setSearchLoading(false) })
+    return () => { cancelled = true }
+  }, [deferredQuery])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   function prevMonth() {
@@ -103,6 +119,13 @@ export default function CalendarPage() {
     return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
   }
 
+  function fmtDate(iso) {
+    const d = new Date(iso)
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 ${fmt(iso)}`
+  }
+
+  const isSearching = searchQuery.trim().length > 0
+
   return (
     <div className="cal-page">
       <header className="cal-page__header">
@@ -133,9 +156,39 @@ export default function CalendarPage() {
         <button className="btn-add" onClick={openCreate}>+ 일정 추가</button>
       </header>
 
-      {loading && <div className="cal-loading">로딩 중…</div>}
+      <div className="cal-search-bar">
+        <input
+          className="cal-search-input"
+          type="search"
+          placeholder="일정 검색…"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        {isSearching && (
+          <button className="cal-search-clear" onClick={() => setSearchQuery('')}>✕</button>
+        )}
+      </div>
 
-      <MonthCalendar
+      {isSearching ? (
+        <div className="cal-search-results">
+          {searchLoading && <p className="cal-search-empty">검색 중…</p>}
+          {!searchLoading && searchResults.length === 0 && (
+            <p className="cal-search-empty">검색 결과가 없습니다.</p>
+          )}
+          {searchResults.map(ev => (
+            <button key={ev.id} className="cal-search-item" onClick={() => openEdit(ev)}>
+              <div className="cal-search-item__bar" style={{ background: ev.color ?? '#3b82f6' }} />
+              <div className="cal-search-item__body">
+                <span className="cal-search-item__title">{ev.title}</span>
+                <span className="cal-search-item__meta">{fmtDate(ev.startTime)}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <>
+          {loading && <div className="cal-loading">로딩 중…</div>}
+          <MonthCalendar
         year={year}
         month={month}
         events={events}
@@ -143,29 +196,31 @@ export default function CalendarPage() {
         onSelectDate={setSelectedDate}
       />
 
-      {selectedDate && (
-        <section className="day-panel">
-          <h2 className="day-panel__title">
-            {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
-            <span className="day-panel__count">{selectedEvents.length}건</span>
-          </h2>
-          {selectedEvents.length === 0 ? (
-            <p className="day-panel__empty">일정이 없습니다. <button className="link-btn" onClick={openCreate}>추가하기</button></p>
-          ) : (
-            <ul className="day-panel__list">
-              {selectedEvents.map((ev) => (
-                <li key={ev.id} className="day-event" onClick={() => openEdit(ev)}>
-                  <div className={`day-event__bar ${ev.recurring ? 'day-event__bar--recurring' : ''}`} />
-                  <div className="day-event__body">
-                    <span className="day-event__title">{ev.title}</span>
-                    <span className="day-event__time">{fmt(ev.startTime)} – {fmt(ev.endTime)}</span>
-                    {ev.recurring && <span className="day-event__tag">반복</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
+          {selectedDate && (
+            <section className="day-panel">
+              <h2 className="day-panel__title">
+                {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
+                <span className="day-panel__count">{selectedEvents.length}건</span>
+              </h2>
+              {selectedEvents.length === 0 ? (
+                <p className="day-panel__empty">일정이 없습니다. <button className="link-btn" onClick={openCreate}>추가하기</button></p>
+              ) : (
+                <ul className="day-panel__list">
+                  {selectedEvents.map((ev) => (
+                    <li key={ev.id} className="day-event" onClick={() => openEdit(ev)}>
+                      <div className="day-event__bar" style={{ background: ev.color ?? '#3b82f6' }} />
+                      <div className="day-event__body">
+                        <span className="day-event__title">{ev.title}</span>
+                        <span className="day-event__time">{fmt(ev.startTime)} – {fmt(ev.endTime)}</span>
+                        {ev.recurring && <span className="day-event__tag">반복</span>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           )}
-        </section>
+        </>
       )}
 
       <ScheduleModal

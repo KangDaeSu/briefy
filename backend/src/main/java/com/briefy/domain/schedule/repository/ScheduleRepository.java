@@ -46,6 +46,18 @@ public interface ScheduleRepository extends JpaRepository<Schedule, UUID> {
         @Param("rangeEnd") OffsetDateTime rangeEnd
     );
 
+    @Query("""
+        SELECT s FROM Schedule s
+        WHERE s.user.id = :userId
+        AND LOWER(s.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        ORDER BY s.startTime ASC
+        """)
+    List<Schedule> searchByTitle(
+        @Param("userId") UUID userId,
+        @Param("keyword") String keyword,
+        org.springframework.data.domain.Pageable pageable
+    );
+
     // 알림 스케줄러용: 특정 시간대에 시작하는 비반복 일정
     @Query("""
         SELECT s FROM Schedule s

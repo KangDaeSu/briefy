@@ -16,6 +16,7 @@ public record ScheduleResponse(
     @Nullable String rrule,
     boolean recurring,
     boolean skipHolidays,
+    String color,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt
 ) {
@@ -30,6 +31,7 @@ public record ScheduleResponse(
             s.getRrule(),
             s.getRrule() != null,
             s.isSkipHolidays(),
+            s.getColor(),
             s.getCreatedAt(),
             s.getUpdatedAt()
         );

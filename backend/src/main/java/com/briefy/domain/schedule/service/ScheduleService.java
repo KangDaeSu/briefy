@@ -48,11 +48,14 @@ public class ScheduleService {
         this.userService = userService;
     }
 
+    private static final String DEFAULT_COLOR = "#3b82f6";
+
     @Transactional
     public ScheduleResponse create(UUID userId, ScheduleRequest req) {
         var user = userService.findById(userId);
         var schedule = new Schedule(user, req.title(), req.description(),
-                req.startTime(), req.endTime(), req.rrule(), Boolean.TRUE.equals(req.skipHolidays()));
+                req.startTime(), req.endTime(), req.rrule(), Boolean.TRUE.equals(req.skipHolidays()),
+                req.color() != null ? req.color() : DEFAULT_COLOR);
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
@@ -81,8 +84,18 @@ public class ScheduleService {
     public ScheduleResponse update(UUID userId, UUID scheduleId, ScheduleRequest req) {
         var schedule = findOwnedSchedule(userId, scheduleId);
         schedule.update(req.title(), req.description(), req.startTime(), req.endTime(),
-                req.rrule(), Boolean.TRUE.equals(req.skipHolidays()));
+                req.rrule(), Boolean.TRUE.equals(req.skipHolidays()),
+                req.color() != null ? req.color() : schedule.getColor());
         return ScheduleResponse.from(schedule);
+    }
+
+    public List<ScheduleResponse> search(UUID userId, String keyword) {
+        if (keyword == null || keyword.isBlank()) return List.of();
+        return scheduleRepository.searchByTitle(userId, keyword.trim(),
+                org.springframework.data.domain.Pageable.ofSize(50))
+                .stream()
+                .map(ScheduleResponse::from)
+                .toList();
     }
 
     @Transactional

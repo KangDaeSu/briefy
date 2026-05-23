@@ -1,5 +1,6 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { useDarkMode } from './hooks/useDarkMode'
 import CalendarPage from './pages/CalendarPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -11,15 +12,25 @@ import './App.css'
 
 function AppNav() {
   const { user, logout } = useAuth()
+  const [dark, toggleDark] = useDarkMode()
   return (
     <nav className="app-nav">
       <Link to="/" className="app-logo">briefy</Link>
-      {user && (
-        <div className="app-nav__user">
-          <Link to="/settings" className="app-nav__name">{user.name}</Link>
-          <button className="app-nav__logout" onClick={logout}>로그아웃</button>
-        </div>
-      )}
+      <div className="app-nav__user">
+        <button
+          className="app-nav__theme-btn"
+          onClick={toggleDark}
+          aria-label={dark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+        >
+          {dark ? '☀' : '🌙'}
+        </button>
+        {user && (
+          <>
+            <Link to="/settings" className="app-nav__name">{user.name}</Link>
+            <button className="app-nav__logout" onClick={logout}>로그아웃</button>
+          </>
+        )}
+      </div>
     </nav>
   )
 }
