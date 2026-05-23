@@ -4,8 +4,8 @@ import CalendarPage from './pages/CalendarPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SettingsPage from './pages/SettingsPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
+// import ForgotPasswordPage from './pages/ForgotPasswordPage'
+// import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -32,8 +32,8 @@ function AppShell() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
+          {/* <Route path="/reset-password" element={<ResetPasswordPage />} /> */}
           <Route
             path="/"
             element={

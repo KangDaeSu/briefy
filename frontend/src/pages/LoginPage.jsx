@@ -156,9 +156,9 @@ export default function LoginPage() {
           </form>
         )}
 
-        <p className="auth-link">
+        {/* <p className="auth-link">
           <Link to="/forgot-password">비밀번호를 잊으셨나요?</Link>
-        </p>
+        </p> */}
         <p className="auth-link">
           계정이 없으신가요? <Link to="/register">회원가입</Link>
         </p>

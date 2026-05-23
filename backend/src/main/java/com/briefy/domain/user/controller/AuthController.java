@@ -1,14 +1,14 @@
 package com.briefy.domain.user.controller;
 
 import com.briefy.domain.user.dto.AuthResponse;
-import com.briefy.domain.user.dto.ForgotPasswordRequest;
+// import com.briefy.domain.user.dto.ForgotPasswordRequest;
 import com.briefy.domain.user.dto.LoginRequest;
 import com.briefy.domain.user.dto.RegisterRequest;
-import com.briefy.domain.user.dto.ResetPasswordRequest;
+// import com.briefy.domain.user.dto.ResetPasswordRequest;
 import com.briefy.domain.user.dto.UserResponse;
 import com.briefy.domain.user.dto.AuthResult;
 import com.briefy.domain.user.service.AuthService;
-import com.briefy.domain.user.service.PasswordResetService;
+// import com.briefy.domain.user.service.PasswordResetService;
 import com.briefy.domain.user.service.UserService;
 import com.briefy.global.config.CookieProperties;
 import com.briefy.global.config.UserPrincipal;
@@ -29,15 +29,13 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
-    private final PasswordResetService passwordResetService;
+    // private final PasswordResetService passwordResetService;
     private final CookieProperties cookieProperties;
 
     public AuthController(AuthService authService, UserService userService,
-                          PasswordResetService passwordResetService,
                           CookieProperties cookieProperties) {
         this.authService = authService;
         this.userService = userService;
-        this.passwordResetService = passwordResetService;
         this.cookieProperties = cookieProperties;
     }
 
@@ -69,17 +67,17 @@ public class AuthController {
         return ApiResponse.ok(UserResponse.from(userService.findById(principal.getUserId())));
     }
 
-    @PostMapping("/forgot-password")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        passwordResetService.requestReset(request.email());
-    }
+    // @PostMapping("/forgot-password")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    //     passwordResetService.requestReset(request.email());
+    // }
 
-    @PostMapping("/reset-password")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordResetService.resetPassword(request.token(), request.newPassword());
-    }
+    // @PostMapping("/reset-password")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    //     passwordResetService.resetPassword(request.token(), request.newPassword());
+    // }
 
     private void setJwtCookie(HttpServletResponse response, String token) {
         response.addHeader(HttpHeaders.SET_COOKIE,
