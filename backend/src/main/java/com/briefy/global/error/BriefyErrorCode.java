@@ -15,7 +15,8 @@ public enum BriefyErrorCode {
     UNAUTHORIZED("A001", "인증이 필요합니다"),
     FORBIDDEN("A002", "접근 권한이 없습니다"),
     INVALID_TOKEN("A003", "유효하지 않은 토큰입니다"),
-    INVALID_CREDENTIALS("A004", "이메일 또는 비밀번호가 올바르지 않습니다");
+    INVALID_CREDENTIALS("A004", "이메일 또는 비밀번호가 올바르지 않습니다"),
+    TOKEN_INVALID("A005", "유효하지 않거나 만료된 토큰입니다");
 
     private final String code;
     private final String message;
