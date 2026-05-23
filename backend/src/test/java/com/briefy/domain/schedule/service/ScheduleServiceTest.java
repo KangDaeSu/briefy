@@ -49,7 +49,7 @@ class ScheduleServiceTest {
         scheduleId = UUID.randomUUID();
         startTime = OffsetDateTime.now().plusDays(1).withNano(0);
         endTime = startTime.plusHours(1);
-        schedule = new Schedule(user, "스탠드업", null, startTime, endTime, null, false);
+        schedule = new Schedule(user, "스탠드업", null, startTime, endTime, null, false, "#3b82f6");
         ReflectionTestUtils.setField(schedule, "id", scheduleId);
     }
 
@@ -60,7 +60,7 @@ class ScheduleServiceTest {
         when(userService.findById(userId)).thenReturn(user);
         when(scheduleRepository.save(any())).thenReturn(schedule);
 
-        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null);
+        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null, null);
         var result = scheduleService.create(userId, req);
 
         assertThat(result.title()).isEqualTo("스탠드업");
@@ -71,7 +71,7 @@ class ScheduleServiceTest {
     void create_userNotFound_throws() {
         when(userService.findById(any())).thenThrow(new BriefyException(BriefyErrorCode.USER_NOT_FOUND));
 
-        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null);
+        var req = new ScheduleRequest("스탠드업", null, startTime, endTime, null, null, null);
 
         assertThatThrownBy(() -> scheduleService.create(userId, req))
                 .isInstanceOf(BriefyException.class)
@@ -121,7 +121,7 @@ class ScheduleServiceTest {
         when(scheduleRepository.findByIdAndUserId(scheduleId, userId))
                 .thenReturn(Optional.of(schedule));
 
-        var req = new ScheduleRequest("수정된 제목", "설명", startTime, endTime, null, null);
+        var req = new ScheduleRequest("수정된 제목", "설명", startTime, endTime, null, null, null);
         var result = scheduleService.update(userId, scheduleId, req);
 
         assertThat(result.title()).isEqualTo("수정된 제목");
@@ -167,7 +167,7 @@ class ScheduleServiceTest {
 
         // 매주 월요일 반복
         Schedule recurring = new Schedule(user, "주간 회의", null,
-                startTime, endTime, "FREQ=WEEKLY;BYDAY=MO", false);
+                startTime, endTime, "FREQ=WEEKLY;BYDAY=MO", false, "#3b82f6");
         ReflectionTestUtils.setField(recurring, "id", UUID.randomUUID());
 
         when(scheduleRepository.findNonRecurringByUserAndRange(userId, from, to))
@@ -190,7 +190,7 @@ class ScheduleServiceTest {
 
         OffsetDateTime dtStart = OffsetDateTime.parse("2026-05-01T00:00:00Z");
         Schedule daily = new Schedule(user, "매일 회의", null,
-                dtStart, dtStart.plusHours(1), "FREQ=DAILY", true);
+                dtStart, dtStart.plusHours(1), "FREQ=DAILY", true, "#3b82f6");
         ReflectionTestUtils.setField(daily, "id", UUID.randomUUID());
 
         when(scheduleRepository.findNonRecurringByUserAndRange(userId, from, to))
