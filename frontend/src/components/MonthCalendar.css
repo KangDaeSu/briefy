@@ -135,3 +135,46 @@
   color: #6b7280;
   padding-left: 4px;
 }
+
+@media (max-width: 640px) {
+  .cal-day-name {
+    font-size: 10px;
+    padding: 4px 0;
+  }
+
+  .cal-cell {
+    min-height: 56px;
+    padding: 2px;
+    border-radius: 4px;
+  }
+
+  .cal-cell__top {
+    min-height: 18px;
+    gap: 1px;
+    margin-bottom: 1px;
+  }
+
+  .cal-cell__date {
+    font-size: 11px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .cal-cell--today .cal-cell__date {
+    width: 18px;
+    height: 18px;
+  }
+
+  .cal-cell__holiday {
+    display: none;
+  }
+
+  .cal-event-dot {
+    font-size: 9px;
+    padding: 1px 2px;
+  }
+
+  .cal-event-more {
+    font-size: 9px;
+  }
+}

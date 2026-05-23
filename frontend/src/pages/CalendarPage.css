@@ -185,3 +185,36 @@
   padding: 1px 6px;
   align-self: flex-start;
 }
+
+@media (max-width: 640px) {
+  .cal-page {
+    padding: 12px 12px;
+  }
+
+  .cal-page__header {
+    margin-bottom: 12px;
+  }
+
+  .cal-page__ym-btn {
+    font-size: 17px;
+    min-width: 110px;
+  }
+
+  .btn-add {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .day-panel {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
+  .day-event {
+    padding: 8px 10px;
+  }
+
+  .day-event__title {
+    font-size: 13px;
+  }
+}

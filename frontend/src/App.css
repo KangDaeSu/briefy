@@ -55,6 +55,15 @@ body {
 }
 .app-nav__logout:hover { background: #f9fafb; }
 
+@media (max-width: 640px) {
+  .app-nav {
+    padding: 0 16px;
+  }
+  .app-nav__name {
+    display: none;
+  }
+}
+
 .app-loading {
   display: flex;
   align-items: center;
