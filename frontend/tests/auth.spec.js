@@ -33,8 +33,10 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: /로그아웃/i }).click()
     await expect(page).toHaveURL('/login')
 
-    // 로그인
-    await page.getByLabel(/이메일/i).fill(email)
+    // 로그인 — 회원가입 후 localStorage에 계정이 저장되므로
+    // 로그인 페이지는 account-list를 먼저 보여줌.
+    // 계정 항목을 클릭하면 비밀번호 입력 폼으로 전환됨.
+    await page.locator('.account-item').first().click()
     await page.getByLabel(/비밀번호/i).fill('pass1234')
     await page.getByRole('button', { name: /^로그인$/i }).click()
     await expect(page).toHaveURL('/')

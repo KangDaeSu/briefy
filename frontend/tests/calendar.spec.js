@@ -20,8 +20,14 @@ async function openNewScheduleModal(page) {
 
 async function fillScheduleForm(page, { title, dateStr, startHour = '10', endHour = '11' }) {
   await page.getByPlaceholder(/일정 제목/i).fill(title)
-  await page.locator('input[type="datetime-local"]').first().fill(`${dateStr}T${startHour}:00`)
-  await page.locator('input[type="datetime-local"]').last().fill(`${dateStr}T${endHour}:00`)
+  // hidden-dt-input(opacity:0)은 Playwright visibility 체크를 통과하지 못하므로
+  // 실제 사용자가 입력하는 visible 필드(date-input, time-hour-input)를 직접 채운다.
+  const startField = page.locator('.datetime-field').nth(0)
+  await startField.locator('.date-input').fill(dateStr)
+  await startField.locator('.time-hour-input').fill(startHour)
+  const endField = page.locator('.datetime-field').nth(1)
+  await endField.locator('.date-input').fill(dateStr)
+  await endField.locator('.time-hour-input').fill(endHour)
 }
 
 function todayStr() {
@@ -36,8 +42,8 @@ test.describe('Calendar', () => {
   test('calendar page loads with month header', async ({ page }) => {
     await registerAndLogin(page)
     await expect(page.locator('.cal-page')).toBeVisible()
-    // "2026년 5월" 형식의 헤더
-    await expect(page.locator('h1')).toContainText(/년/)
+    // "2026년 5월" 형식의 헤더 — 연·월은 h1이 아닌 button.cal-page__ym-btn에 표시됨
+    await expect(page.locator('.cal-page__ym-btn')).toContainText(/년/)
   })
 
   test('create a schedule and see it in day panel', async ({ page }) => {
@@ -105,8 +111,8 @@ test.describe('Calendar', () => {
   test('navigate months forward and back', async ({ page }) => {
     await registerAndLogin(page)
 
-    // .cal-page__nav h1 로 특정 (AppNav 등 다른 h1과 구별)
-    const monthHeader = page.locator('.cal-page__nav h1')
+    // 연·월은 button.cal-page__ym-btn에 표시됨 (피커 추가 이후 h1 → button으로 변경됨)
+    const monthHeader = page.locator('.cal-page__ym-btn')
     const initialText = await monthHeader.textContent()
     await page.locator('.nav-btn').last().click() // 다음달 (›)
     const nextText = await monthHeader.textContent()
