@@ -144,14 +144,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
       - name: Deploy Backend
-        working-directory: backend
-        run: railway up --service backend --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: curl -fSsX POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
 
       # Required GitHub Secrets:
       # - RAILWAY_TOKEN
