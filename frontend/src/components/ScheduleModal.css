@@ -308,6 +308,7 @@
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
+    overflow: hidden;
   }
 
   .modal-box {
@@ -316,6 +317,7 @@
     border-radius: 20px 20px 0 0;
     max-height: 90dvh;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .modal-form {
@@ -324,5 +326,20 @@
 
   .modal-header {
     padding: 14px 16px;
+  }
+
+  /* datetime-box: 날짜를 첫 줄, 시간 컨트롤을 둘째 줄로 분리 */
+  .datetime-box {
+    flex-wrap: wrap;
+  }
+
+  .datetime-box .date-input {
+    flex: 1 0 100%;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-input) !important;
+  }
+
+  .calendar-btn-wrap {
+    margin-left: auto;
   }
 }
