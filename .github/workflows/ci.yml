@@ -136,22 +136,5 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  deploy:
-    name: Deploy to Railway
-    runs-on: ubuntu-latest
-    needs: [backend, frontend, e2e]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy Backend
-        run: curl -fSsX POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
-
-      # Required GitHub Secrets:
-      # - RAILWAY_TOKEN
-      # - JWT_SECRET
-      # - CI_DB_NAME, CI_DB_USER, CI_DB_PASSWORD
-      #
-      # Required Railway environment variables (Backend service):
-      # - SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
-      # - JWT_SECRET, FRONTEND_URL
+  # deploy job 제거 — Railway GitHub 자동 배포 연동으로 대체
+  # Required GitHub Secrets: JWT_SECRET, CI_DB_NAME, CI_DB_USER, CI_DB_PASSWORD
