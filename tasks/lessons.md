@@ -16,46 +16,13 @@
 
 ---
 
-## Spring AI / pgvector
-
-### [2026-05-15] QuestionAnswerAdvisor 패키지 이동 및 Builder 전환 (Spring AI 2.0.0-M6)
-**증상**: `import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor` 컴파일 오류
-**원인**: 2.0.0-M6에서 패키지가 `advisor.vectorstore`로 이동, 생성자도 제거되고 Builder로 교체
-**해결**:
-```java
-// Before (1.x)
-new QuestionAnswerAdvisor(vectorStore, searchRequest)
-
-// After (2.0.0-M6)
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build()
-```
-**교훈**: Spring AI 마이그레이션 시 advisor 패키지 경로 반드시 확인
-
----
-
-## PostgreSQL / pgvector
+## PostgreSQL
 
 ### [2026-05-15] PG18 UUIDv7 함수명: uuid_generate_v7() 아님
 **증상**: Flyway 마이그레이션 실패 — `ERROR: function uuid_generate_v7() does not exist`
 **원인**: `uuid_generate_v7()`은 `pg_uuidv7` 확장의 함수명. PG18 네이티브 빌트인은 `uuidv7()`
 **해결**: 모든 DDL에서 `DEFAULT uuid_generate_v7()` → `DEFAULT uuidv7()`로 교체
 **교훈**: PG18 네이티브 UUIDv7은 `uuidv7()`. 확장 없이 쓸 수 있지만 이름이 다름. 문서 확인 필수
-
----
-
-### [2026-05-15] pgvector HNSW 인덱스 2000차원 한계 (vector 타입)
-**증상**: `ERROR: column cannot have more than 2000 dimensions for hnsw index`
-**원인**: pgvector의 `vector` 타입은 HNSW 인덱스 최대 2000차원. text-embedding-3-large는 3072차원
-**해결**: `halfvec` 캐스팅 함수 인덱스 사용 (pgvector 0.7.0+, halfvec 최대 4000차원)
-```sql
--- Before (실패)
-CREATE INDEX ... USING hnsw (embedding vector_cosine_ops);
-
--- After (성공)
-CREATE INDEX ... USING hnsw ((embedding::halfvec(3072)) halfvec_cosine_ops);
-```
-**교훈**: 2000차원 초과 임베딩은 HNSW에 halfvec 캐스팅 함수 인덱스 필수. 컬럼은 `vector` 유지 가능
 
 ---
 
@@ -68,22 +35,11 @@ CREATE INDEX ... USING hnsw ((embedding::halfvec(3072)) halfvec_cosine_ops);
 ---
 
 ### [2026-05-12] PostgreSQL 18 Docker 볼륨 경로 오류
-### 증상
-- briefy-db 컨테이너가 계속 restarting 상태
-- "There appears to be PostgreSQL data in /var/lib/postgresql/data (unused mount/volume)" 에러
+**증상**: briefy-db 컨테이너가 계속 restarting 상태. "There appears to be PostgreSQL data in /var/lib/postgresql/data (unused mount/volume)" 에러
+**원인**: PostgreSQL 18부터 PGDATA 기본 경로가 변경됨 (구버전: `/var/lib/postgresql/data` → 신버전: `/var/lib/postgresql/18/docker`)
+**해결**: docker-compose.yml 볼륨 마운트를 `/var/lib/postgresql/data` → `/var/lib/postgresql`로 변경 후 `docker compose down -v` 재시작
+**교훈**: PostgreSQL 18+ Docker 설정 시 볼륨은 `/var/lib/postgresql`로 마운트. 구버전 예제 그대로 복사하면 안 됨
 
-### 원인
-- PostgreSQL 18부터 PGDATA 기본 경로가 변경됨
-- 구버전: /var/lib/postgresql/data
-- 신버전: /var/lib/postgresql/18/docker
-
-### 해결
-- docker-compose.yml 볼륨 마운트를 /var/lib/postgresql/data → /var/lib/postgresql 로 변경
-- docker compose down -v 로 기존 볼륨 삭제 후 재시작
-
-### 교훈
-- PostgreSQL 18+ Docker 설정 시 볼륨은 반드시 /var/lib/postgresql 로 마운트
-- 구버전 예제 그대로 복사하면 안 됨, 반드시 공식 문서 확인
 ---
 
 ## Spring Boot 4.0
@@ -123,33 +79,47 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 ---
 
-### [2026-05-15] @MockitoBean으로 인터페이스 default 메서드 모킹 시 위임 안 됨
-**증상**: `vectorStore.similaritySearch()` 결과가 항상 빈 리스트 반환
-**원인**: `@MockitoBean`으로 `EmbeddingModel` 인터페이스를 모킹하면 default 메서드가 실제 구현을 호출하지 않고 null 반환. 배치 add 시 `call()`이 embeddings를 1개만 반환해 `IndexOutOfBoundsException` 발생
-**해결**: `@MockitoBean` 대신 `@TestConfiguration`에 실제 구현체 제공
-```java
-@TestConfiguration
-static class TestConfig {
-    @Bean @Primary
-    EmbeddingModel fixedVectorEmbeddingModel() {
-        return new EmbeddingModel() {
-            @Override
-            public EmbeddingResponse call(EmbeddingRequest req) {
-                var embeddings = IntStream.range(0, req.getInstructions().size())
-                    .mapToObj(i -> new Embedding(fixedVec(), i)).toList();
-                return new EmbeddingResponse(embeddings);
-            }
-            @Override public float[] embed(Document doc) { return fixedVec(); }
-            @Override public int dimensions() { return 3072; }
-        };
-    }
+## React 19
+
+### [2026-06-02] 모바일 input[type="date"] 네이티브 최소 너비로 가로 오버플로 발생
+**증상**: 모바일(393px)에서 ScheduleModal 날짜 입력 행이 뷰포트를 벗어나 가로 스크롤 발생. 로고와 버튼 일부가 잘림
+**원인**: `input[type="date"]`는 브라우저가 네이티브 UI를 렌더링하기 위한 최소 너비를 강제함. `flex: 0 0 auto`와 조합 시 좁은 화면에서 flex 컨테이너를 초과
+**해결**:
+```css
+@media (max-width: 640px) {
+  .datetime-box { flex-wrap: wrap; }
+  .datetime-box .date-input {
+    flex: 1 0 100%;   /* 날짜 입력이 첫 행 전체를 차지 */
+  }
 }
 ```
-**교훈**: 인터페이스 default 메서드가 많고 상호 의존하는 경우 Mock보다 실구현체 테스트 더블이 안전
+**교훈**: 날짜·시간 복합 입력 UI는 모바일에서 `flex-wrap: wrap` 필수. `input[type="date"]` 네이티브 최소 너비를 flex 레이아웃 설계 시 반드시 고려할 것
 
 ---
 
-## React 19
+## E2E / Playwright
+
+### [2026-06-02] opacity:0 숨긴 input을 Playwright fill()로 채울 수 없음
+**증상**: `fill()` 타임아웃 — `hidden-dt-input`에 값을 입력하려 했으나 Playwright 가시성 검사 실패
+**원인**: Playwright `fill()`은 요소가 visible한지 확인. `opacity: 0; pointer-events: none` CSS가 적용된 native input은 interactable하지 않다고 판단해 거부
+**해결**: 숨겨진 native input 대신 사용자가 실제로 보는 visible 필드(`.date-input`, `.time-hour-input`)를 직접 채움
+**교훈**: 커스텀 날짜·시간 피커 테스트 시 숨겨진 native input이 아닌 visible 요소를 타겟으로 할 것. `force: true` 옵션은 회피책이지 해결책이 아님
+
+---
+
+### [2026-06-02] UI 리팩토링 후 E2E 셀렉터 미동기화 (셀렉터 드리프트)
+**증상**: `page.locator('h1')` 타임아웃 — 연·월 표시가 `h1`에서 `button.cal-page__ym-btn`으로 변경됐는데 테스트가 업데이트되지 않음
+**원인**: UI 컴포넌트 리팩토링 시 E2E 셀렉터를 동기화하지 않음. CI에서 E2E 단계가 없거나 통과 여부를 확인하지 않으면 드리프트가 누적됨
+**해결**: 셀렉터를 실제 DOM 구조에 맞게 수정
+**교훈**: UI 컴포넌트 변경 시 E2E 셀렉터를 항상 함께 수정. 시맨틱 셀렉터(role, label)를 우선하고 구조적 셀렉터(h1, div)는 최소화할 것
+
+---
+
+### [2026-06-02] 로그인 테스트 — localStorage 상태에 따른 UI 분기 미고려
+**증상**: 회원가입 → 로그아웃 → 로그인 플로우에서 `getByLabel(/이메일/)` 타임아웃
+**원인**: 회원가입 완료 시 계정 정보가 localStorage에 저장됨. 로그인 페이지는 저장된 계정이 있으면 account-list UI를 먼저 표시하고 이메일 입력 폼을 숨김. 테스트는 항상 이메일 입력 폼이 있다고 가정
+**해결**: `.account-item` 클릭 → 비밀번호 입력 순서로 테스트 수정
+**교훈**: E2E 테스트는 앱의 실제 상태(localStorage, 세션, 쿠키)를 고려해야 함. 이전 테스트 단계가 남긴 상태가 다음 단계 UI 분기에 영향을 줄 수 있음
 
 ---
 
@@ -239,7 +209,7 @@ jwt:
 
 ### [2026-05-23] `spring.mail` 활성화 시 `MailHealthIndicator`가 Railway Healthcheck 실패
 **증상**: 앱 정상 기동 후에도 Railway Healthcheck가 주기적으로 실패. 메일 기능은 주석처리된 상태인데도 발생
-**원인**: `spring.mail.host`가 설정되면 `JavaMailSender` 빈이 생성되고, Spring Boot Actuator가 `MailHealthIndicator`를 자동 등록. Healthcheck(`/actuator/health`) 호출마다 SMTP 서버(localhost:1025)에 연결을 시도하는데, Railway에는 Mailpit이 없으므로 `Connection refused` → 헬스 상태 `DOWN` → Railway가 배포 실패 처리
+**원인**: `spring.mail.host`가 설정되면 `JavaMailSender` 빈이 생성되고, Spring Boot Actuator가 `MailHealthIndicator`를 자동 등록. Healthcheck(`/actuator/health`) 호출마다 SMTP 서버에 연결을 시도하는데, Railway에는 Mailpit이 없으므로 `Connection refused` → 헬스 상태 `DOWN`
 **해결**: 메일 헬스 인디케이터 비활성화
 ```yaml
 management:
@@ -247,7 +217,7 @@ management:
     mail:
       enabled: false
 ```
-**교훈**: `spring.mail`을 설정하면 메일 기능을 쓰지 않아도 Actuator가 SMTP 핑을 보낸다. 메일 서버가 없는 환경(개발/배포)에서는 `management.health.mail.enabled: false`를 함께 추가할 것
+**교훈**: `spring.mail`을 설정하면 메일 기능을 쓰지 않아도 Actuator가 SMTP 핑을 보낸다. 메일 서버가 없는 환경에서는 `management.health.mail.enabled: false`를 함께 추가할 것
 
 ---
 
@@ -264,7 +234,7 @@ SPRING_DATASOURCE_URL = jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPOR
 
 ### [2026-05-18] 크로스오리진 요청 401 — SameSite=Lax 쿠키 차단
 **증상**: Vercel(프론트) → Railway(백엔드) POST 요청 시 401 Unauthorized. 로그인 후 일정 생성/조회 모두 실패
-**원인**: 브라우저 SameSite=Lax 정책으로 크로스사이트 POST 요청에 httpOnly 쿠키가 전송되지 않음. Railway Variables에 `COOKIE_SAME_SITE=None, COOKIE_SECURE=true`를 추가해도 프론트·백엔드 도메인이 다르면(vercel.app ↔ railway.app) 쿠키 기반 인증은 근본적으로 불안정
+**원인**: 브라우저 SameSite=Lax 정책으로 크로스사이트 POST 요청에 httpOnly 쿠키가 전송되지 않음. 프론트·백엔드 도메인이 다르면(vercel.app ↔ railway.app) 쿠키 기반 인증은 근본적으로 불안정
 **해결**: 쿠키 의존을 버리고 JWT를 `Authorization: Bearer` 헤더로 전달하도록 전환
 ```java
 // JwtAuthenticationFilter.extractToken() — 헤더 우선, 쿠키 폴백
@@ -272,14 +242,12 @@ String authHeader = request.getHeader("Authorization");
 if (authHeader != null && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7);
 }
-// ... 쿠키 폴백
 ```
 ```javascript
 // client.js — localStorage에서 토큰 읽어 헤더에 첨부
 const token = localStorage.getItem('jwt')
 headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
 ```
-- 로그인/회원가입 응답 body에 토큰을 포함(`AuthResponse { user, token }`)하여 프론트가 localStorage에 저장
 **교훈**: 프론트·백엔드 도메인이 다른 배포 환경에서는 처음부터 Bearer 헤더 방식으로 설계할 것. 쿠키 인증은 Same-Site 환경에서만 안정적
 
 ---
@@ -305,44 +273,39 @@ config.setAllowCredentials(true);
 
 ### [2026-05-18] 배포 후 화면 공백 — localStorage 데이터 오염
 **증상**: 재배포 후 초기 화면이 전혀 뜨지 않음. 콘솔에 `TypeError: Cannot read properties of undefined (reading '0')`
-**원인**: 이전 배포에서 `briefy_accounts` localStorage 항목에 `{ email: undefined, name: undefined }` 형태의 잘못된 데이터가 저장됨. 로그인 페이지에서 `account.name[0]` 접근 시 undefined 오류 → 화면 전체 크래시
-**해결**: 브라우저 개발자도구에서 `localStorage.removeItem('briefy_accounts')` 실행하여 오염 데이터 제거
+**원인**: 이전 배포에서 `briefy_accounts` localStorage 항목에 `{ email: undefined, name: undefined }` 형태의 잘못된 데이터가 저장됨. `account.name[0]` 접근 시 undefined 오류 → 화면 전체 크래시
+**해결**: 브라우저 개발자도구에서 `localStorage.removeItem('briefy_accounts')` 실행
 **교훈**: localStorage에 객체를 저장할 때 값이 유효한지 검증 후 저장할 것. `saveAccount` 함수에서 `email`이 빈 값이면 저장하지 않는 방어 코드 추가 권장
 
 ---
 
 ### [2026-05-17] Vercel 배포 — API URL이 Vercel 도메인에 붙어버리는 문제
 **증상**: `https://briefy.vercel.app/briefy-production.up.railway.app/api/v1/...` 로 요청됨 → 405 오류
-**원인**: `VITE_API_BASE_URL`에 `https://`를 빠뜨리고 `briefy-production.up.railway.app` 만 입력. 브라우저가 이를 상대 경로로 해석해 Vercel 도메인 뒤에 붙임
+**원인**: `VITE_API_BASE_URL`에 `https://`를 빠뜨리고 도메인만 입력. 브라우저가 상대 경로로 해석해 Vercel 도메인 뒤에 붙임
 **해결**: Vercel Environment Variables에서 `VITE_API_BASE_URL = https://briefy-production.up.railway.app` 으로 수정 후 재배포
-**교훈**: `VITE_API_BASE_URL`은 반드시 `https://` 포함한 전체 URL. 수정 후 Vercel Redeploy 필수
+**교훈**: `VITE_API_BASE_URL`은 반드시 `https://` 포함한 전체 URL
+
+---
+
+### [2026-06-02] Railway CLI `RAILWAY_TOKEN` 인증 지속 실패
+**증상**: project deploy token, account token 모두 `Invalid RAILWAY_TOKEN` 오류. 토큰 재발급 후에도 동일
+**원인**: Railway CLI 버전과 토큰 형식 간 호환성 문제로 추정. Railway GitHub 자동 배포 연동이 이미 설정된 경우 CI deploy job 자체가 불필요
+**해결**: GitHub Actions deploy job 제거. Railway GitHub 연동이 push를 감지해 자동 배포
+**교훈**: Railway GitHub 연동이 설정된 프로젝트에서 CI deploy job은 중복. 테스트는 CI에서, 배포는 Railway 연동으로 분리하면 관리 부담이 줄어듦
 
 ---
 
 ## 기타
+
 ### [2026-05-13] Claude Code에 공식 문서 연결하기 (Context7 MCP)
-
-**증상**: Claude Code가 React 19, Spring Boot 4.0 등 최신 API를 옛날 패턴으로 생성함 (예: forwardRef 사용, 구버전 Spring 어노테이션 등)
-
+**증상**: Claude Code가 React 19, Spring Boot 4.0 등 최신 API를 옛날 패턴으로 생성함
 **원인**: Claude의 훈련 데이터 컷오프 이후 변경된 API를 실시간으로 알 수 없음
-
 **해결**:
 1. Context7 MCP 설치
 ```bash
-   claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
+claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 ```
 2. CLAUDE.md에 공식 문서 URL 명시
-```markdown
-   ## Official Documentation
-   - React 19: https://react.dev
-   - Spring Boot 4.0: https://docs.spring.io/spring-boot/docs/4.0.x/reference/html/
-   - Spring AI: https://docs.spring.io/spring-ai/reference/
-   - PostgreSQL 18: https://www.postgresql.org/docs/18/
-   - pgvector: https://github.com/pgvector/pgvector
-```
 3. 프롬프트 끝에 `use context7` 추가하면 실시간 문서 기반으로 코드 생성
 
-**교훈**:
-- 최신 프레임워크 코드 생성 시 반드시 `use context7`를 붙일 것
-- CLAUDE.md에 버전과 문서 URL을 명시해두면 매 세션마다 컨텍스트 재설정 불필요
-- `claude mcp list`로 MCP 서버 등록 여부 먼저 확인
+**교훈**: 최신 프레임워크 코드 생성 시 반드시 `use context7`를 붙일 것. CLAUDE.md에 버전과 문서 URL을 명시해두면 매 세션마다 컨텍스트 재설정 불필요
