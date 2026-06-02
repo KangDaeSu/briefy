@@ -64,3 +64,12 @@ desktop.ini
 logs/
 *.log
 spring.log
+
+# =====================
+# Portfolio / Local assets
+# =====================
+*.pdf
+*.jpg
+*.jpeg
+*.png
+portfolio.html
