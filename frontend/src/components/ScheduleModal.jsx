@@ -86,6 +86,8 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   const [error, setError] = useState(null)
   const startDtRef = useRef(null)
   const endDtRef = useRef(null)
+  const startMinRef = useRef(null)
+  const endMinRef = useRef(null)
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -163,12 +165,16 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     try { ref.current?.showPicker() } catch { ref.current?.focus() }
   }
 
-  function handleHourChange(prefix) {
+  function handleHourChange(prefix, nextRef) {
     return e => {
       const raw = e.target.value.replace(/\D/g, '')
       if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '' })); return }
       const n = parseInt(raw, 10)
       setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(Math.min(24, n)) }))
+      if (raw.length >= 2) {
+        nextRef.current?.focus()
+        nextRef.current?.select()
+      }
     }
   }
 
@@ -291,9 +297,9 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
           <div className="datetime-fields">
             {[
-              { prefix: 'start', label: '시작', ref: startDtRef },
-              { prefix: 'end',   label: '종료', ref: endDtRef },
-            ].map(({ prefix, label, ref }) => (
+              { prefix: 'start', label: '시작', ref: startDtRef, minRef: startMinRef },
+              { prefix: 'end',   label: '종료', ref: endDtRef,   minRef: endMinRef },
+            ].map(({ prefix, label, ref, minRef }) => (
               <div key={prefix} className="datetime-field">
                 <span className="field-label">{label} <span className="required">*</span></span>
                 <div className="datetime-box">
@@ -309,12 +315,13 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
                     type="text"
                     inputMode="numeric"
                     value={form[`${prefix}Hour`]}
-                    onChange={handleHourChange(prefix)}
+                    onChange={handleHourChange(prefix, minRef)}
                     onBlur={handleHourBlur(prefix)}
                     placeholder="시"
                   />
                   <span className="time-colon">:</span>
                   <input
+                    ref={minRef}
                     className="time-minute-input"
                     type="text"
                     inputMode="numeric"
