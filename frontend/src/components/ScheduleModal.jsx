@@ -165,12 +165,12 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     try { ref.current?.showPicker() } catch { ref.current?.focus() }
   }
 
-  function handleHourChange(prefix, nextRef) {
+  function handleHourChange(prefix) {
+    const nextRef = prefix === 'start' ? startMinRef : endMinRef
     return e => {
-      const raw = e.target.value.replace(/\D/g, '')
+      const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
       if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '' })); return }
-      const n = parseInt(raw, 10)
-      setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(Math.min(24, n)) }))
+      setForm(prev => ({ ...prev, [`${prefix}Hour`]: raw }))
       if (raw.length >= 2) {
         nextRef.current?.focus()
         nextRef.current?.select()
@@ -180,10 +180,9 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   function handleMinuteChange(prefix) {
     return e => {
-      const raw = e.target.value.replace(/\D/g, '')
+      const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
       if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Minute`]: '' })); return }
-      const n = parseInt(raw, 10)
-      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(Math.min(59, n)) }))
+      setForm(prev => ({ ...prev, [`${prefix}Minute`]: raw }))
     }
   }
 
@@ -204,8 +203,8 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           const newDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
           return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전', [dateKey]: newDate }
         })
-      } else if (h === 0) {
-        setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }))
+      } else if (h > 24) {
+        setForm(prev => ({ ...prev, [`${prefix}Hour`]: '12' }))
       }
     }
   }
@@ -213,7 +212,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
   function handleMinuteBlur(prefix) {
     return () => {
       const m = parseInt(form[`${prefix}Minute`], 10)
-      const clamped = isNaN(m) ? 0 : m
+      const clamped = isNaN(m) ? 0 : Math.min(59, m)
       setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }))
     }
   }
@@ -296,60 +295,92 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           </label>
 
           <div className="datetime-fields">
-            {[
-              { prefix: 'start', label: '시작', ref: startDtRef, minRef: startMinRef },
-              { prefix: 'end',   label: '종료', ref: endDtRef,   minRef: endMinRef },
-            ].map(({ prefix, label, ref, minRef }) => (
-              <div key={prefix} className="datetime-field">
-                <span className="field-label">{label} <span className="required">*</span></span>
-                <div className="datetime-box">
+            <div className="datetime-field">
+              <span className="field-label">시작 <span className="required">*</span></span>
+              <div className="datetime-box">
+                <input type="date" className="date-input" value={form.startDate} onChange={set('startDate')} required />
+                <input
+                  className="time-hour-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={form.startHour}
+                  onChange={handleHourChange('start')}
+                  onBlur={handleHourBlur('start')}
+                  placeholder="시"
+                />
+                <span className="time-colon">:</span>
+                <input
+                  ref={startMinRef}
+                  className="time-minute-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={form.startMinute}
+                  onChange={handleMinuteChange('start')}
+                  onBlur={handleMinuteBlur('start')}
+                  placeholder="분"
+                />
+                <select className="ampm-select" value={form.startAmPm} onChange={set('startAmPm')}>
+                  <option value="오전">오전</option>
+                  <option value="오후">오후</option>
+                </select>
+                <div className="calendar-btn-wrap">
                   <input
-                    type="date"
-                    className="date-input"
-                    value={form[`${prefix}Date`]}
-                    onChange={set(`${prefix}Date`)}
-                    required
+                    ref={startDtRef}
+                    type="datetime-local"
+                    className="hidden-dt-input"
+                    value={dtLocalValue('start')}
+                    onChange={handleDtLocal('start')}
+                    tabIndex={-1}
                   />
-                  <input
-                    className="time-hour-input"
-                    type="text"
-                    inputMode="numeric"
-                    value={form[`${prefix}Hour`]}
-                    onChange={handleHourChange(prefix, minRef)}
-                    onBlur={handleHourBlur(prefix)}
-                    placeholder="시"
-                  />
-                  <span className="time-colon">:</span>
-                  <input
-                    ref={minRef}
-                    className="time-minute-input"
-                    type="text"
-                    inputMode="numeric"
-                    value={form[`${prefix}Minute`]}
-                    onChange={handleMinuteChange(prefix)}
-                    onBlur={handleMinuteBlur(prefix)}
-                    placeholder="분"
-                  />
-                  <select className="ampm-select" value={form[`${prefix}AmPm`]} onChange={set(`${prefix}AmPm`)}>
-                    <option value="오전">오전</option>
-                    <option value="오후">오후</option>
-                  </select>
-                  <div className="calendar-btn-wrap">
-                    <input
-                      ref={ref}
-                      type="datetime-local"
-                      className="hidden-dt-input"
-                      value={dtLocalValue(prefix)}
-                      onChange={handleDtLocal(prefix)}
-                      tabIndex={-1}
-                    />
-                    <button type="button" className="calendar-btn" onClick={() => openPicker(ref)}>
-                      <CalendarIcon />
-                    </button>
-                  </div>
+                  <button type="button" className="calendar-btn" onClick={() => openPicker(startDtRef)}>
+                    <CalendarIcon />
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="datetime-field">
+              <span className="field-label">종료 <span className="required">*</span></span>
+              <div className="datetime-box">
+                <input type="date" className="date-input" value={form.endDate} onChange={set('endDate')} required />
+                <input
+                  className="time-hour-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={form.endHour}
+                  onChange={handleHourChange('end')}
+                  onBlur={handleHourBlur('end')}
+                  placeholder="시"
+                />
+                <span className="time-colon">:</span>
+                <input
+                  ref={endMinRef}
+                  className="time-minute-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={form.endMinute}
+                  onChange={handleMinuteChange('end')}
+                  onBlur={handleMinuteBlur('end')}
+                  placeholder="분"
+                />
+                <select className="ampm-select" value={form.endAmPm} onChange={set('endAmPm')}>
+                  <option value="오전">오전</option>
+                  <option value="오후">오후</option>
+                </select>
+                <div className="calendar-btn-wrap">
+                  <input
+                    ref={endDtRef}
+                    type="datetime-local"
+                    className="hidden-dt-input"
+                    value={dtLocalValue('end')}
+                    onChange={handleDtLocal('end')}
+                    tabIndex={-1}
+                  />
+                  <button type="button" className="calendar-btn" onClick={() => openPicker(endDtRef)}>
+                    <CalendarIcon />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <label>
