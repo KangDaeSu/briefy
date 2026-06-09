@@ -170,7 +170,15 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
     return e => {
       const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
       if (raw === '') { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '' })); return }
-      setForm(prev => ({ ...prev, [`${prefix}Hour`]: raw }))
+      if (raw === '12') {
+        setForm(prev => ({
+          ...prev,
+          [`${prefix}Hour`]: raw,
+          [`${prefix}AmPm`]: prev[`${prefix}AmPm`] === '오전' ? '오후' : '오전',
+        }))
+      } else {
+        setForm(prev => ({ ...prev, [`${prefix}Hour`]: raw }))
+      }
       if (raw.length >= 2) {
         nextRef.current?.focus()
         nextRef.current?.select()
