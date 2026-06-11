@@ -196,13 +196,14 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   function handleHourBlur(prefix) {
     return () => {
-      const h = parseInt(form[`${prefix}Hour`], 10)
-      if (isNaN(h)) { setForm(prev => ({ ...prev, [`${prefix}Hour`]: '0' })); return }
-      if (h >= 13 && h <= 23) {
-        setForm(prev => ({ ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }))
-      } else if (h === 24) {
-        const dateKey = `${prefix}Date`
-        setForm(prev => {
+      setForm(prev => {
+        const h = parseInt(prev[`${prefix}Hour`], 10)
+        if (isNaN(h)) return { ...prev, [`${prefix}Hour`]: '0' }
+        if (h >= 13 && h <= 23) {
+          return { ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }
+        }
+        if (h === 24) {
+          const dateKey = `${prefix}Date`
           const currentDate = prev[dateKey]
           if (!currentDate) return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }
           const d = new Date(currentDate + 'T00:00:00')
@@ -210,10 +211,10 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
           const pad = n => String(n).padStart(2, '0')
           const newDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
           return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전', [dateKey]: newDate }
-        })
-      } else if (h > 24) {
-        setForm(prev => ({ ...prev, [`${prefix}Hour`]: '12' }))
-      }
+        }
+        if (h > 24) return { ...prev, [`${prefix}Hour`]: '12' }
+        return prev
+      })
     }
   }
 
