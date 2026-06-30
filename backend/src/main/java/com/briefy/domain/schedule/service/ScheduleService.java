@@ -104,12 +104,8 @@ public class ScheduleService {
     }
 
     private Schedule findOwnedSchedule(UUID userId, UUID scheduleId) {
-        return scheduleRepository.findByIdAndUserId(scheduleId, userId).orElseThrow(() -> {
-            BriefyErrorCode code = scheduleRepository.existsById(scheduleId)
-                    ? BriefyErrorCode.FORBIDDEN
-                    : BriefyErrorCode.SCHEDULE_NOT_FOUND;
-            return new BriefyException(code);
-        });
+        return scheduleRepository.findByIdAndUserId(scheduleId, userId)
+                .orElseThrow(() -> new BriefyException(BriefyErrorCode.SCHEDULE_NOT_FOUND));
     }
 
     private List<OffsetDateTime> expandRrule(@Nullable String rrule, OffsetDateTime dtStart,

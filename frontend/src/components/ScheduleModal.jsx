@@ -28,7 +28,7 @@ function to12h(h24) {
 
 function to24h(hour12, ampm) {
   const h = parseInt(hour12, 10)
-  if (isNaN(h)) return 0
+  if (isNaN(h) || h > 24) return 0
   if (h >= 13 && h <= 23) return h
   if (h === 0 || h === 24) return 0
   if (ampm === '오전') return h === 12 ? 0 : h
@@ -199,6 +199,7 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
       setForm(prev => {
         const h = parseInt(prev[`${prefix}Hour`], 10)
         if (isNaN(h)) return { ...prev, [`${prefix}Hour`]: '0' }
+        if (h === 0) return { ...prev, [`${prefix}Hour`]: '0', [`${prefix}AmPm`]: '오전' }
         if (h >= 13 && h <= 23) {
           return { ...prev, [`${prefix}Hour`]: String(h - 12), [`${prefix}AmPm`]: '오후' }
         }
@@ -220,9 +221,11 @@ export default function ScheduleModal({ open, onClose, onSave, onDelete, default
 
   function handleMinuteBlur(prefix) {
     return () => {
-      const m = parseInt(form[`${prefix}Minute`], 10)
-      const clamped = isNaN(m) ? 0 : Math.min(59, m)
-      setForm(prev => ({ ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }))
+      setForm(prev => {
+        const m = parseInt(prev[`${prefix}Minute`], 10)
+        const clamped = isNaN(m) ? 0 : Math.min(59, m)
+        return { ...prev, [`${prefix}Minute`]: String(clamped).padStart(2, '0') }
+      })
     }
   }
 

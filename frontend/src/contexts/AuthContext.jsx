@@ -55,8 +55,8 @@ export function AuthProvider({ children }) {
   const deleteAccount = useCallback(async () => {
     await usersApi.deleteMe()
     setToken(null)
-    await authApi.logout()
     setUser(null)
+    await authApi.logout().catch(() => {})
   }, [])
 
   return (

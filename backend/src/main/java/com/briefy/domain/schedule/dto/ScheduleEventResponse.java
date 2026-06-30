@@ -18,19 +18,20 @@ public record ScheduleEventResponse(
     OffsetDateTime endTime,
     @Nullable String rrule,
     boolean recurring,
+    boolean skipHolidays,
     String color
 ) {
     public static ScheduleEventResponse from(Schedule s) {
         return new ScheduleEventResponse(
             s.getId(), s.getTitle(), s.getDescription(),
-            s.getStartTime(), s.getEndTime(), s.getRrule(), false, s.getColor()
+            s.getStartTime(), s.getEndTime(), s.getRrule(), false, s.isSkipHolidays(), s.getColor()
         );
     }
 
     public static ScheduleEventResponse occurrence(Schedule s, OffsetDateTime start, OffsetDateTime end) {
         return new ScheduleEventResponse(
             s.getId(), s.getTitle(), s.getDescription(),
-            start, end, s.getRrule(), true, s.getColor()
+            start, end, s.getRrule(), true, s.isSkipHolidays(), s.getColor()
         );
     }
 }

@@ -49,6 +49,10 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(BriefyErrorCode.SCHEDULE_OVERLAP));
         }
+        if (msg != null && msg.contains("users_email_unique")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(BriefyErrorCode.USER_ALREADY_EXISTS));
+        }
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("데이터 제약 조건 위반"));
     }
 }

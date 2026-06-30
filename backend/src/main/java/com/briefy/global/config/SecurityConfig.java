@@ -47,7 +47,8 @@ public class SecurityConfig {
                     "/api/v1/auth/logout",
                     // "/api/v1/auth/forgot-password",
                     // "/api/v1/auth/reset-password",
-                    "/actuator/**"
+                    "/actuator/health",
+                    "/actuator/info"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

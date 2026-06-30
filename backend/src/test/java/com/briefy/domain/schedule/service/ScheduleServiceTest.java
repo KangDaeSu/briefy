@@ -95,7 +95,6 @@ class ScheduleServiceTest {
     @Test
     void getOne_scheduleNotFound_throws() {
         when(scheduleRepository.findByIdAndUserId(scheduleId, userId)).thenReturn(Optional.empty());
-        when(scheduleRepository.existsById(scheduleId)).thenReturn(false);
 
         assertThatThrownBy(() -> scheduleService.getOne(userId, scheduleId))
                 .isInstanceOf(BriefyException.class)
@@ -104,14 +103,14 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void getOne_forbidden_throws() {
+    void getOne_otherUsersSchedule_throwsNotFound() {
+        // 다른 사용자의 일정이거나 존재하지 않는 일정 모두 NOT_FOUND로 처리 (IDOR 방지)
         when(scheduleRepository.findByIdAndUserId(scheduleId, userId)).thenReturn(Optional.empty());
-        when(scheduleRepository.existsById(scheduleId)).thenReturn(true);
 
         assertThatThrownBy(() -> scheduleService.getOne(userId, scheduleId))
                 .isInstanceOf(BriefyException.class)
                 .satisfies(e -> assertThat(((BriefyException) e).getErrorCode())
-                        .isEqualTo(BriefyErrorCode.FORBIDDEN));
+                        .isEqualTo(BriefyErrorCode.SCHEDULE_NOT_FOUND));
     }
 
     // ─── update ───────────────────────────────────────────────────────────────

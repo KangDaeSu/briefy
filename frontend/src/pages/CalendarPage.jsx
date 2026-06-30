@@ -36,9 +36,8 @@ export default function CalendarPage() {
   const fetchEvents = useCallback(async (y, m, signal) => {
     setLoading(true)
     try {
-      // UTC 경계를 명시적으로 지정해 로컬 시간 변환으로 인한 날짜 이탈 방지
-      const from = new Date(Date.UTC(y, m, 1)).toISOString()
-      const to   = new Date(Date.UTC(y, m + 1, 1)).toISOString()
+      const from = new Date(y, m, 1).toISOString()
+      const to   = new Date(y, m + 1, 1).toISOString()
       const res = await schedulesApi.list(from, to, { signal })
       setEvents(res.data ?? [])
     } catch (e) {
