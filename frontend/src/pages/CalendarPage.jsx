@@ -118,6 +118,16 @@ export default function CalendarPage() {
     return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
   }
 
+  function fmtEnd(startIso, endIso) {
+    const s = new Date(startIso)
+    const e = new Date(endIso)
+    const sameDay = s.getFullYear() === e.getFullYear() &&
+      s.getMonth() === e.getMonth() &&
+      s.getDate() === e.getDate()
+    if (sameDay) return fmt(endIso)
+    return `${e.getMonth() + 1}월 ${e.getDate()}일 ${fmt(endIso)}`
+  }
+
   function fmtDate(iso) {
     const d = new Date(iso)
     return `${d.getMonth() + 1}월 ${d.getDate()}일 ${fmt(iso)}`
@@ -210,7 +220,7 @@ export default function CalendarPage() {
                       <div className="day-event__bar" style={{ background: ev.color ?? '#3b82f6' }} />
                       <div className="day-event__body">
                         <span className="day-event__title">{ev.title}</span>
-                        <span className="day-event__time">{fmt(ev.startTime)} – {fmt(ev.endTime)}</span>
+                        <span className="day-event__time">{fmt(ev.startTime)} – {fmtEnd(ev.startTime, ev.endTime)}</span>
                         {ev.recurring && <span className="day-event__tag">반복</span>}
                       </div>
                     </li>
