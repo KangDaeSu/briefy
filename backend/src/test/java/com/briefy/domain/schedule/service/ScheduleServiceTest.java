@@ -183,7 +183,7 @@ class ScheduleServiceTest {
 
     @Test
     void listEvents_skipHolidays_excludesBuddhasBirthday() {
-        // 2026-05-24~28: 5일 중 2026-05-25 부처님오신날 제외 → 4건 (rangeEnd inclusive)
+        // 2026-05-24~28: 5일 중 2026-05-24(부처님오신날), 2026-05-25(대체휴일) 제외 → 3건 (rangeEnd inclusive)
         OffsetDateTime from = OffsetDateTime.parse("2026-05-24T00:00:00Z");
         OffsetDateTime to   = OffsetDateTime.parse("2026-05-28T00:00:00Z");
 
@@ -199,7 +199,9 @@ class ScheduleServiceTest {
 
         var events = scheduleService.listEvents(userId, from, to);
 
-        assertThat(events).hasSize(4);
+        assertThat(events).hasSize(3);
+        assertThat(events).noneMatch(e ->
+                e.startTime().toLocalDate().toString().equals("2026-05-24"));
         assertThat(events).noneMatch(e ->
                 e.startTime().toLocalDate().toString().equals("2026-05-25"));
     }
